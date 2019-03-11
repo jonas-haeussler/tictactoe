@@ -6,13 +6,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.game.tictactoe.screens.GameScreen;
 import com.game.tictactoe.utils.AssetLoader;
 
 public class TicTacToeGame extends Game {
 	public SpriteBatch batch;
 	public Texture background;
-
+	public Skin comicSkin;
 	private AssetLoader loader;
 
 	
