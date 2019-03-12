@@ -7,6 +7,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.game.tictactoe.TicTacToeGame;
 import com.game.tictactoe.screens.GameScreen;
+import com.game.tictactoe.screens.PlayableScreen;
 import com.game.tictactoe.utils.FieldListener;
 
 
@@ -22,6 +23,8 @@ public class MapGrid extends Table {
     private float x0, y0;
     private Button[][] buttons;
 
+    private Vector2[] winnerFields;
+
     private boolean active;
     private boolean hasWinner;
     private byte winner;
@@ -32,6 +35,7 @@ public class MapGrid extends Table {
         this.game = game;
         this.gameScreen = gameScreen;
 
+        this.winnerFields = new Vector2[mapWidthHeight];
         this.mapWidthHeight = mapWidthHeight;
         this.width = width;
         this.height = height;
@@ -54,7 +58,7 @@ public class MapGrid extends Table {
         super();
         this.game = game;
         this.gameScreen = gameScreen;
-
+        this.winnerFields = new Vector2[mapWidthHeight];
         this.mapWidthHeight = mapWidthHeight;
         this.width = width;
         this.height = height;
@@ -62,12 +66,17 @@ public class MapGrid extends Table {
         CELL_SIZE = width / (mapWidthHeight + 1);
         CELL_SIZE += CELL_SIZE / (2 * mapWidthHeight);
         buttons = new Button[mapWidthHeight][mapWidthHeight];
-        FieldListener listener = new FieldListener(this, gameScreen);
+        FieldListener listener = null;
+        if(gameScreen instanceof PlayableScreen){
+             listener = new FieldListener(this, (PlayableScreen) gameScreen);
+        }
         for (int i = 0; i < mapWidthHeight; i++) {
             for (int j = 0; j < mapWidthHeight; j++) {
                 buttons[i][j] = new ImageButton(game.comicSkin);
                 buttons[i][j].setColor(1, 1, 1, 0);
-                buttons[i][j].addListener(listener);
+                if(listener != null) {
+                    buttons[i][j].addListener(listener);
+                }
             }
         }
         this.x0 = x0;
@@ -79,7 +88,6 @@ public class MapGrid extends Table {
 
 
     }
-
     public void initTable(float x0, float y0, float width, float height){
         this.clear();
         setBounds(x0 - width / 20, y0 - height / 20, width, height);
@@ -104,16 +112,16 @@ public class MapGrid extends Table {
     public void drawCircles(ShapeRenderer renderer, ShapeRenderer transparentRenderer, float[][] animation, float delta){
         for (int i = 0; i < buttons.length; i++) {
             for (int j = 0; j < buttons.length; j++) {
-                if(mapGrid[i][j] == 2 && animation[i][j] >= 1){
-                    renderer.circle(x0 + buttons[i][j].getX() + CELL_SIZE / 3, y0 + buttons[i][j].getY() + CELL_SIZE / 3, CELL_SIZE / 2.5f);
-                    transparentRenderer.circle(x0 + buttons[i][j].getX() + CELL_SIZE / 3, y0 + buttons[i][j].getY() + CELL_SIZE / 3, CELL_SIZE / 3.5f);
-                }
-                else if(mapGrid[i][j] == 2) {
-                    renderer.arc(x0 + buttons[i][j].getX() + CELL_SIZE / 3, y0 + buttons[i][j].getY() + CELL_SIZE / 3, CELL_SIZE / 2.5f, 90, 360 * animation[i][j]);
-                    animation[i][j] += 2 * delta;
-                    transparentRenderer.circle(x0 + buttons[i][j].getX() + CELL_SIZE / 3, y0 + buttons[i][j].getY() + CELL_SIZE / 3, CELL_SIZE / 3.5f);
+                    if (mapGrid[i][j] == 2 && animation[i][j] >= 1) {
+                        renderer.circle(x0 + buttons[i][j].getX() + CELL_SIZE / 3, y0 + buttons[i][j].getY() + CELL_SIZE / 3, CELL_SIZE / 2.5f);
+                        transparentRenderer.circle(x0 + buttons[i][j].getX() + CELL_SIZE / 3, y0 + buttons[i][j].getY() + CELL_SIZE / 3, CELL_SIZE / 3.5f);
 
-                }
+                    }
+                    else if(mapGrid[i][j] == 2){
+                        renderer.arc(x0 + buttons[i][j].getX() + CELL_SIZE / 3, y0 + buttons[i][j].getY() + CELL_SIZE / 3, CELL_SIZE / 2.5f, 90, 360 * animation[i][j]);
+                        animation[i][j] += 2 * delta;
+                        transparentRenderer.circle(x0 + buttons[i][j].getX() + CELL_SIZE / 3, y0 + buttons[i][j].getY() + CELL_SIZE / 3, CELL_SIZE / 3.5f);
+                    }
             }
         }
     }
@@ -230,6 +238,7 @@ public class MapGrid extends Table {
                         mapGrid[i][j] = 2;
                         if(player2Win()){
                             hasWinner = true;
+                            active = false;
                         }
                         if(!gameScreen.hasWinner(i, j)){
                             gameScreen.setAllActive(false);
@@ -253,6 +262,7 @@ public class MapGrid extends Table {
                         mapGrid[i][j] = 1;
                         if(player1Win()){
                             hasWinner = true;
+                            active = false;
                         }
                         if(!gameScreen.hasWinner(i, j)){
                             gameScreen.setAllActive(false);
@@ -269,7 +279,7 @@ public class MapGrid extends Table {
         }
         return false;
     }
-    private boolean player2Win(){
+    public boolean player2Win(){
         int x, y, z, q;
         for (int i = 0; i < mapGrid.length; i++) {
             x = 0;
@@ -289,7 +299,28 @@ public class MapGrid extends Table {
                 if(mapGrid[j][mapGrid.length - 1 - j] == 2){
                     q += 1;
                 }
-                if(x >= 3 || y >= 3 || z >= 3 || q >= 3){
+                if(x >= 3) {
+                    for (int k = 0; k < winnerFields.length; k++) {
+                        winnerFields[k] = new Vector2(buttons[i][k].getX(), buttons[i][k].getY());
+                    }
+                    winner = 2;
+                    return true;
+                } else if(y >= 3){
+                    for (int k = 0; k < winnerFields.length; k++) {
+                        winnerFields[k] = new Vector2(buttons[k][i].getX(), buttons[k][i].getY());
+                    }
+                    winner = 2;
+                    return true;
+                } else if(z >= 3){
+                    for (int k = 0; k < winnerFields.length; k++) {
+                        winnerFields[k] = new Vector2(buttons[k][k].getX(), buttons[k][k].getY());
+                    }
+                    winner = 2;
+                    return true;
+                } else if(q >= 3) {
+                    for (int k = 0; k < winnerFields.length; k++) {
+                        winnerFields[k] = new Vector2(buttons[k][buttons.length - 1 - k].getX(), buttons[k][buttons.length - 1 - k].getY());
+                    }
                     winner = 2;
                     return true;
                 }
@@ -297,7 +328,7 @@ public class MapGrid extends Table {
         }
         return false;
     }
-    private boolean player1Win(){
+    public boolean player1Win(){
         int x, y, z, q;
         for (int i = 0; i < mapGrid.length; i++) {
             x = 0;
@@ -317,7 +348,28 @@ public class MapGrid extends Table {
                 if(mapGrid[j][mapGrid.length - 1 - j] == 1){
                     q += 1;
                 }
-                if(x >= 3 || y >= 3 || z >= 3 || q >= 3){
+                if(x >= 3) {
+                    for (int k = 0; k < winnerFields.length; k++) {
+                        winnerFields[k] = new Vector2(buttons[i][k].getX(), buttons[i][k].getY());
+                    }
+                    winner = 1;
+                    return true;
+                } else if(y >= 3){
+                    for (int k = 0; k < winnerFields.length; k++) {
+                        winnerFields[k] = new Vector2(buttons[k][i].getX(), buttons[k][i].getY());
+                    }
+                    winner = 1;
+                    return true;
+                } else if(z >= 3){
+                    for (int k = 0; k < winnerFields.length; k++) {
+                        winnerFields[k] = new Vector2(buttons[k][k].getX(), buttons[k][k].getY());
+                    }
+                    winner = 1;
+                    return true;
+                } else if(q >= 3) {
+                    for (int k = 0; k < winnerFields.length; k++) {
+                        winnerFields[k] = new Vector2(buttons[k][buttons.length - 1 - k].getX(), buttons[k][buttons.length - 1 - k].getY());
+                    }
                     winner = 1;
                     return true;
                 }
@@ -361,10 +413,20 @@ public class MapGrid extends Table {
     public byte getWinner(){
         return winner;
     }
-
+    public void setWinner(boolean hasWinner){
+        this.hasWinner = hasWinner;
+    }
+    public Vector2[] getWinnerFields(){
+        return winnerFields;
+    }
+    public byte[][] getArray(){
+        return mapGrid;
+    }
     public void dimGrid(ShapeRenderer shapeRenderer){
-
-        shapeRenderer.rect(x0 - width / 11, y0 - height / 11, width, height);
+            shapeRenderer.rect(x0 - width / 11, y0 - height / 11, width, height);
+    }
+    public Button[][] getButtons(){
+        return buttons;
     }
 
 }
