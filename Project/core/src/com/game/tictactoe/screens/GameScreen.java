@@ -7,14 +7,8 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.game.tictactoe.TicTacToeGame;
 import com.game.tictactoe.objects.KI;
@@ -31,23 +25,26 @@ public abstract class GameScreen implements Screen {
     protected ShapeRenderer ellipseRenderer;
     protected ShapeRenderer transparentRenderer;
     protected ShapeRenderer dimRenderer;
-    private MapGrid mapGrid;
-    private MapGrid[][] mapGrids;
-    private int fieldSize;
-    private Vector2[] winnerFields;
+    protected MapGrid mapGrid;
+    protected MapGrid[][] mapGrids;
+    protected int fieldSize;
+    protected Vector2[] winnerFields;
 
 
-    private float[][][][] animation;
-    private float[][] bigAnimation;
+    protected float[][][][] animation;
+    protected float[][] bigAnimation;
 
     private boolean player; // player1 = false, player2 = true
 
     protected Stage stage;
-    private float[][] winnerTime;
-    private KI ki1, ki2;
+    protected float[][] winnerTime;
+    private float bigWinnerTime;
+    protected KI ki1;
+    protected KI ki2;
     private byte kiPlayer1, kiPlayer2;
     private byte kiLevel;
     protected boolean active;
+    protected boolean[][] templateTime;
 
 
 
@@ -59,6 +56,7 @@ public abstract class GameScreen implements Screen {
         this.kiLevel = kiLevel;
         this.kiPlayer2 = kiPlayer2;
         this.active = true;
+        templateTime = new boolean[fieldSize][fieldSize];
         animation = new float[fieldSize][fieldSize][fieldSize][fieldSize];
         bigAnimation = new float[fieldSize][fieldSize];
         camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
@@ -68,7 +66,7 @@ public abstract class GameScreen implements Screen {
         winnerTime = new float[fieldSize][fieldSize];
 
 
-        stage = new Stage(new ScreenViewport());
+        stage = new Stage(new ScreenViewport(camera));
 
         for (int i = 0; i < fieldSize; i++) {
             for (int j = 0; j < fieldSize; j++) {
@@ -118,6 +116,57 @@ public abstract class GameScreen implements Screen {
             this.ki2 = new KI(mapGrid, mapGrids, kiPlayer2, kiLevel, this, game);
             new Thread(ki2).start();
         }
+
+    }
+    private void drawSmallEllipse(int i, int j) {
+        ellipseRenderer.begin(ShapeRenderer.ShapeType.Line);
+        if (winnerFields[0].x == winnerFields[1].x) {
+            ellipseRenderer.ellipse(mapGrids[i][j].getX0() + winnerFields[0].x - mapGrids[i][j].getCELL_SIZE() * 1.4f
+                    , mapGrids[i][j].getY0() + winnerFields[0].y - mapGrids[i][j].getCELL_SIZE() * 1.2f
+                    , mapGrid.getCELL_SIZE()
+                    , mapGrids[i][j].getCELL_SIZE(), 90f);
+        } else if (winnerFields[0].y == winnerFields[1].y) {
+            ellipseRenderer.ellipse(mapGrids[i][j].getX0() + winnerFields[0].x - mapGrids[i][j].getCELL_SIZE() / 2f
+                    , mapGrids[i][j].getY0() + winnerFields[0].y - mapGrids[i][j].getCELL_SIZE() / 7
+                    , mapGrid.getCELL_SIZE()
+                    , mapGrids[i][j].getCELL_SIZE());
+        } else if (winnerFields[0].x > winnerFields[1].x) {
+            ellipseRenderer.ellipse(mapGrids[i][j].getX0() + winnerFields[0].x - mapGrid.getCELL_SIZE() * 0.87f
+                    , mapGrids[i][j].getY0() + winnerFields[0].y - mapGrids[i][j].getCELL_SIZE() * 1.3f
+                    , mapGrid.getCELL_SIZE() * 1.3f
+                    , mapGrids[i][j].getCELL_SIZE() * 1.1f, 45f);
+        } else if (winnerFields[0].x < winnerFields[1].x) {
+            ellipseRenderer.ellipse(mapGrids[i][j].getX0() + winnerFields[0].x - mapGrids[i][j].getCELL_SIZE() * 0.8f
+                    , mapGrids[i][j].getY0() + winnerFields[0].y - mapGrids[i][j].getCELL_SIZE() * 1.3f
+                    , mapGrid.getCELL_SIZE() * 1.3f
+                    , mapGrids[i][j].getCELL_SIZE() * 1.1f, 135f);
+        }
+        ellipseRenderer.end();
+    }
+    private void drawBigEllipse(){
+        ellipseRenderer.begin(ShapeRenderer.ShapeType.Line);
+        if (winnerFields[0].x == winnerFields[1].x) {
+            ellipseRenderer.ellipse(mapGrid.getX0() + winnerFields[0].x - mapGrid.getCELL_SIZE()
+                    , mapGrid.getY0() + mapGrid.getCELL_SIZE()
+                    , mapGrid.getWidth()
+                    , mapGrid.getCELL_SIZE(), 90f);
+        } else if (winnerFields[0].y == winnerFields[1].y) {
+            ellipseRenderer.ellipse(mapGrid.getX0() + winnerFields[0].x
+                    , mapGrid.getY0() + winnerFields[0].y - mapGrid.getCELL_SIZE() * 1.5f
+                    , mapGrid.getWidth()
+                    , mapGrid.getCELL_SIZE());
+        } else if (winnerFields[0].x > winnerFields[1].x) {
+            ellipseRenderer.ellipse(mapGrid.getX0() + winnerFields[0].x - mapGrid.getWidth() * 0.85f
+                    , mapGrid.getY0() + winnerFields[0].y - mapGrid.getWidth() * 0.85f
+                    , mapGrid.getWidth() * 1.3f
+                    , mapGrid.getCELL_SIZE() * 1.1f, 45f);
+        } else if (winnerFields[0].x < winnerFields[1].x) {
+            ellipseRenderer.ellipse(mapGrid.getX0() + winnerFields[0].x - mapGrid.getCELL_SIZE() * 0.5f
+                    , mapGrid.getY0() + winnerFields[0].y - mapGrid.getWidth() * 0.9f
+                    , mapGrid.getWidth() * 1.3f
+                    , mapGrid.getCELL_SIZE() * 1.1f, 135f);
+        }
+        ellipseRenderer.end();
     }
     public boolean getPlayer(){
         return player;
@@ -134,13 +183,23 @@ public abstract class GameScreen implements Screen {
     public void setAllActive(boolean active){
         for (int i = 0; i < mapGrids.length; i++) {
             for (int j = 0; j < mapGrids.length; j++) {
-                if(!mapGrids[i][j].hasWinner())
+                if(!mapGrids[i][j].hasWinner() && !isFull(i, j))
                    mapGrids[i][j].setActive(active);
             }
         }
     }
     public boolean hasWinner(int i, int j) {
         return mapGrids[i][j].hasWinner();
+    }
+    public boolean isFull(int i, int j){
+        boolean temp;
+        if(temp = mapGrids[i][j].getTemplateCounter() >= (fieldSize * fieldSize)){
+            if(!templateTime[i][j]) {
+                templateTime[i][j] = true;
+                mapGrid.incrementTemplateCounter();
+            }
+        }
+        return temp;
     }
     public byte getKiPlayer1(){
         return kiPlayer1;
@@ -160,6 +219,9 @@ public abstract class GameScreen implements Screen {
     public boolean isActive(){
         return active;
     }
+    public boolean hasTotalWinner(){
+        return mapGrid.hasWinner();
+    }
     @Override
     public void show() {
 
@@ -174,7 +236,7 @@ public abstract class GameScreen implements Screen {
         game.batch.end();
         transparentRenderer.setProjectionMatrix(camera.combined);
         transparentRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        transparentRenderer.rect(0, Gdx.graphics.getHeight() / 2 - Gdx.graphics.getWidth() / 2, Gdx.graphics.getWidth(), Gdx.graphics.getHeight() / 1.76f);
+        transparentRenderer.rect(0, Gdx.graphics.getHeight() / 2 - Gdx.graphics.getWidth() / 2, Gdx.graphics.getWidth(), mapGrid.getCELL_SIZE() * 3);
         transparentRenderer.end();
 
         renderer.setProjectionMatrix(camera.combined);
@@ -190,10 +252,12 @@ public abstract class GameScreen implements Screen {
         mapGrid.drawMap(renderer, 15);
         for (int i = 0; i < fieldSize; i++) {
             for (int j = 0; j < fieldSize; j++) {
+                // draws map, circles and crosses with animation
                 if(!mapGrids[i][j].hasWinner() || winnerTime[i][j] < 1.75f){
                     mapGrids[i][j].drawMap(renderer, 7);
                     mapGrids[i][j].drawCircles(circleRenderer, transparentRenderer, animation[i][j], delta);
                     mapGrids[i][j].drawCrosses(crossRenderer, transparentRenderer, animation[i][j], delta);
+                    // dims the non active fields
                     if(!mapGrids[i][j].isActive() && !mapGrids[i][j].hasWinner()){
                         Gdx.gl.glEnable(GL20.GL_BLEND);
                         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -204,39 +268,19 @@ public abstract class GameScreen implements Screen {
                     }
 
                 }
+                // draws the ellipses when a field has a winner
                 if(((winnerTime[i][j] <= 0.5f && winnerTime[i][j] >= 0.25f)
                         || (winnerTime[i][j] <= 1f && winnerTime[i][j] >= 0.75f)
                         || (winnerTime[i][j] <= 1.5f && winnerTime[i][j] >= 1.25f))
                         && (mapGrids[i][j].hasWinner())) {
                     ellipseRenderer.setProjectionMatrix(camera.combined);
-                    ellipseRenderer.begin(ShapeRenderer.ShapeType.Line);
                     winnerFields = mapGrids[i][j].getWinnerFields();
-                    if(winnerFields[0].x == winnerFields[1].x){
-                        ellipseRenderer.ellipse(mapGrids[i][j].getX0() + winnerFields[0].x - mapGrids[i][j].getCELL_SIZE() * 1.4f
-                                            , mapGrids[i][j].getY0() + winnerFields[0].y - mapGrids[i][j].getCELL_SIZE() * 1.2f
-                                            , mapGrid.getCELL_SIZE()
-                                            , mapGrids[i][j].getCELL_SIZE(), 90f);
+                    if (winnerFields[0] != null) {
+                        drawSmallEllipse(i, j);
                     }
-                    else if(winnerFields[0].y == winnerFields[1].y){
-                        ellipseRenderer.ellipse(mapGrids[i][j].getX0() + winnerFields[0].x - mapGrids[i][j].getCELL_SIZE() / 2
-                                        , mapGrids[i][j].getY0() + winnerFields[0].y - mapGrids[i][j].getCELL_SIZE() / 7
-                                        , mapGrid.getCELL_SIZE()
-                                        , mapGrids[i][j].getCELL_SIZE());
-                    }
-                    else if(winnerFields[0].x > winnerFields[1].x) {
-                        ellipseRenderer.ellipse(mapGrids[i][j].getX0() + winnerFields[0].x - mapGrid.getCELL_SIZE() * 0.87f
-                                , mapGrids[i][j].getY0() + winnerFields[0].y - mapGrids[i][j].getCELL_SIZE() * 1.3f
-                                , mapGrid.getCELL_SIZE() * 1.3f
-                                , mapGrids[i][j].getCELL_SIZE() * 1.1f, 45f);
-                    }
-                    else if(winnerFields[0].x < winnerFields[1].x){
-                        ellipseRenderer.ellipse(mapGrids[i][j].getX0() + winnerFields[0].x - mapGrids[i][j].getCELL_SIZE() * 0.8f
-                                , mapGrids[i][j].getY0() + winnerFields[0].y - mapGrids[i][j].getCELL_SIZE() * 1.3f
-                                , mapGrid.getCELL_SIZE() * 1.3f
-                                , mapGrids[i][j].getCELL_SIZE() * 1.1f, 135f);
-                    }
-                    ellipseRenderer.end();
                 }
+
+                // draws a big cross or circle for a won field
                 else if(winnerTime[i][j] >= 1.75f) {
                     if(mapGrids[i][j].getWinner() == 2 && bigAnimation[i][j] <= 2) {
                         mapGrids[i][j].drawBigCircle(circleRenderer, transparentRenderer, bigAnimation[i][j]);
@@ -246,10 +290,16 @@ public abstract class GameScreen implements Screen {
                         mapGrids[i][j].drawBigCross(crossRenderer, transparentRenderer, bigAnimation[i][j]);
                         bigAnimation[i][j] += 4 * delta;
                     }
+                    // check for total winner and draw big ellipse
                     else if(mapGrids[i][j].getWinner() == 2){
                         mapGrid.getArray()[i][j] = 2;
+                        if(!templateTime[i][j]) {
+                            templateTime[i][j] = true;
+                            mapGrid.incrementTemplateCounter();
+                        }
                         if(mapGrid.player2Win()){
-                            // player 2 win animation
+                            mapGrid.setHasWinner(true);
+                            winnerFields = new Vector2[fieldSize];
                         }
                         mapGrids[i][j].drawBigCircle(circleRenderer, transparentRenderer, 2);
                         Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -258,11 +308,18 @@ public abstract class GameScreen implements Screen {
 
 
                     }
+
+                    // check for total winner and draw big ellipse
                     else if(mapGrids[i][j].getWinner() == 1){
                         mapGrid.getArray()[i][j] = 1;
-                        if(mapGrid.player1Win()){
-                            // player 1 win animation
+                        if(!templateTime[i][j]) {
+                            templateTime[i][j] = true;
+                            mapGrid.incrementTemplateCounter();
                         }
+                        if(mapGrid.player1Win()){
+                            mapGrid.setHasWinner(true);
+                            winnerFields = mapGrid.getWinnerFields();
+                            }
                         mapGrids[i][j].drawBigCross(crossRenderer, transparentRenderer, 2);
                         Gdx.gl.glEnable(GL20.GL_BLEND);
                         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
@@ -270,6 +327,20 @@ public abstract class GameScreen implements Screen {
 
                     }
                 }
+            }
+        }
+        if(mapGrid.hasWinner()){
+            bigWinnerTime += delta;
+        }
+        if(((bigWinnerTime <= 0.5f && bigWinnerTime >= 0.25f)
+                || (bigWinnerTime <= 1f && bigWinnerTime >= 0.75f)
+                || (bigWinnerTime <= 1.5f && bigWinnerTime >= 1.25f))
+                && (mapGrid.hasWinner())) {
+            ellipseRenderer.setProjectionMatrix(camera.combined);
+            winnerFields = mapGrid.getWinnerFields();
+            if (winnerFields[0] != null) {
+                drawBigEllipse();
+
             }
         }
         circleRenderer.end();

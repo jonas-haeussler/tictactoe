@@ -19,6 +19,10 @@ public class KI implements Runnable {
         this.gameScreen = gameScreen;
         this.game = game;
     }
+    public void setGridSet(MapGrid bigMapGrid, MapGrid[][] smallMapGrids){
+        this.bigMapGrid = bigMapGrid;
+        this.smallMapGrids = smallMapGrids;
+    }
 
     @Override
     public void run() {
@@ -58,7 +62,6 @@ public class KI implements Runnable {
                     }
                     if(i >= 100 && activeMapGrid != null){
                         activeMapGrid.setActive(false);
-                        activeMapGrid.setWinner(true);
                     }
                 }
             }

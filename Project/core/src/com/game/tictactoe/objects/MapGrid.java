@@ -27,6 +27,7 @@ public class MapGrid extends Table {
 
     private boolean active;
     private boolean hasWinner;
+    private int templateCounter;
     private byte winner;
 
     public MapGrid(float width, float height, int mapWidthHeight, TicTacToeGame game, GameScreen gameScreen){
@@ -41,13 +42,6 @@ public class MapGrid extends Table {
         this.height = height;
         mapGrid = new byte[mapWidthHeight][mapWidthHeight];
         CELL_SIZE = width / (mapWidthHeight);
-        buttons = new Button[mapWidthHeight][mapWidthHeight];
-        for (int i = 0; i < mapWidthHeight; i++) {
-            for (int j = 0; j < mapWidthHeight; j++) {
-                buttons[i][j] = new Button(game.comicSkin);
-
-            }
-        }
         x0 = 0;
         y0 = height / 2 - width / 2;
 
@@ -231,23 +225,25 @@ public class MapGrid extends Table {
     }
 
     public boolean addPlayer2Move(Vector2 position){
-        for (int i = 0; i < buttons.length; i++) {
-            for (int j = 0; j < buttons.length; j++) {
-                if(position.x == (buttons[i][j].getX()) && position.y == (buttons[i][j].getY())){
-                    if(mapGrid[i][j] == 0) {
-                        mapGrid[i][j] = 2;
-                        if(player2Win()){
-                            hasWinner = true;
-                            active = false;
+        if(!gameScreen.hasTotalWinner()) {
+            templateCounter++;
+            for (int i = 0; i < buttons.length; i++) {
+                for (int j = 0; j < buttons.length; j++) {
+                    if (position.x == (buttons[i][j].getX()) && position.y == (buttons[i][j].getY())) {
+                        if (mapGrid[i][j] == 0) {
+                            mapGrid[i][j] = 2;
+                            if (player2Win()) {
+                                hasWinner = true;
+                                active = false;
+                            }
+                            if (!gameScreen.hasWinner(i, j) && !gameScreen.isFull(i, j)) {
+                                gameScreen.setAllActive(false);
+                                gameScreen.setActive(i, j);
+                            } else {
+                                gameScreen.setAllActive(true);
+                            }
+                            return true;
                         }
-                        if(!gameScreen.hasWinner(i, j)){
-                            gameScreen.setAllActive(false);
-                            gameScreen.setActive(i, j);
-                        }
-                        else {
-                            gameScreen.setAllActive(true);
-                        }
-                        return true;
                     }
                 }
             }
@@ -255,24 +251,26 @@ public class MapGrid extends Table {
         return false;
     }
     public boolean addPlayer1Move(Vector2 position){
-        for (int i = 0; i < buttons.length; i++) {
-            for (int j = 0; j < buttons.length; j++) {
-                if(position.x == (buttons[i][j].getX()) && position.y == (buttons[i][j].getY())){
-                    if(mapGrid[i][j] == 0) {
-                        mapGrid[i][j] = 1;
-                        if(player1Win()){
-                            hasWinner = true;
-                            active = false;
-                        }
-                        if(!gameScreen.hasWinner(i, j)){
-                            gameScreen.setAllActive(false);
-                            gameScreen.setActive(i, j);
-                        }
-                        else {
-                            gameScreen.setAllActive(true);
-                        }
+        if(!gameScreen.hasTotalWinner()) {
+            templateCounter++;
+            for (int i = 0; i < buttons.length; i++) {
+                for (int j = 0; j < buttons.length; j++) {
+                    if (position.x == (buttons[i][j].getX()) && position.y == (buttons[i][j].getY())) {
+                        if (mapGrid[i][j] == 0) {
+                            mapGrid[i][j] = 1;
+                            if (player1Win()) {
+                                hasWinner = true;
+                                active = false;
+                            }
+                            if (!gameScreen.hasWinner(i, j) && !gameScreen.isFull(i, j)) {
+                                gameScreen.setAllActive(false);
+                                gameScreen.setActive(i, j);
+                            } else {
+                                gameScreen.setAllActive(true);
+                            }
 
-                        return true;
+                            return true;
+                        }
                     }
                 }
             }
@@ -300,26 +298,54 @@ public class MapGrid extends Table {
                     q += 1;
                 }
                 if(x >= 3) {
-                    for (int k = 0; k < winnerFields.length; k++) {
-                        winnerFields[k] = new Vector2(buttons[i][k].getX(), buttons[i][k].getY());
+                    if(buttons != null) {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(buttons[i][k].getX(), buttons[i][k].getY());
+                        }
+                    }
+                    else {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(gameScreen.getMapGrids()[i][k].getX0(), gameScreen.getMapGrids()[i][k].getY0());
+                        }
                     }
                     winner = 2;
                     return true;
                 } else if(y >= 3){
-                    for (int k = 0; k < winnerFields.length; k++) {
-                        winnerFields[k] = new Vector2(buttons[k][i].getX(), buttons[k][i].getY());
+                    if(buttons != null) {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(buttons[k][i].getX(), buttons[k][i].getY());
+                        }
+                    }
+                    else {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(gameScreen.getMapGrids()[k][i].getX0(), gameScreen.getMapGrids()[k][i].getY0());
+                        }
                     }
                     winner = 2;
                     return true;
                 } else if(z >= 3){
-                    for (int k = 0; k < winnerFields.length; k++) {
-                        winnerFields[k] = new Vector2(buttons[k][k].getX(), buttons[k][k].getY());
+                    if(buttons != null) {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(buttons[k][k].getX(), buttons[k][k].getY());
+                        }
+                    }
+                    else {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(gameScreen.getMapGrids()[k][k].getX0(), gameScreen.getMapGrids()[k][k].getY0());
+                        }
                     }
                     winner = 2;
                     return true;
                 } else if(q >= 3) {
-                    for (int k = 0; k < winnerFields.length; k++) {
-                        winnerFields[k] = new Vector2(buttons[k][buttons.length - 1 - k].getX(), buttons[k][buttons.length - 1 - k].getY());
+                    if(buttons != null) {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(buttons[k][buttons.length - 1 - k].getX(), buttons[k][buttons.length - 1 - k].getY());
+                        }
+                    }
+                    else {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(gameScreen.getMapGrids()[k][mapWidthHeight - 1 - k].getX0(), gameScreen.getMapGrids()[k][mapWidthHeight - 1 - k].getY0());
+                        }
                     }
                     winner = 2;
                     return true;
@@ -349,26 +375,54 @@ public class MapGrid extends Table {
                     q += 1;
                 }
                 if(x >= 3) {
-                    for (int k = 0; k < winnerFields.length; k++) {
-                        winnerFields[k] = new Vector2(buttons[i][k].getX(), buttons[i][k].getY());
+                    if(buttons != null) {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(buttons[i][k].getX(), buttons[i][k].getY());
+                        }
+                    }
+                    else {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(gameScreen.getMapGrids()[i][k].getX0(), gameScreen.getMapGrids()[i][k].getY0());
+                        }
                     }
                     winner = 1;
                     return true;
                 } else if(y >= 3){
-                    for (int k = 0; k < winnerFields.length; k++) {
-                        winnerFields[k] = new Vector2(buttons[k][i].getX(), buttons[k][i].getY());
+                    if(buttons != null) {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(buttons[k][i].getX(), buttons[k][i].getY());
+                        }
+                    }
+                    else {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(gameScreen.getMapGrids()[k][i].getX0(), gameScreen.getMapGrids()[k][i].getY0());
+                        }
                     }
                     winner = 1;
                     return true;
                 } else if(z >= 3){
-                    for (int k = 0; k < winnerFields.length; k++) {
-                        winnerFields[k] = new Vector2(buttons[k][k].getX(), buttons[k][k].getY());
+                    if(buttons != null) {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(buttons[k][k].getX(), buttons[k][k].getY());
+                        }
+                    }
+                    else {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(gameScreen.getMapGrids()[k][k].getX0(), gameScreen.getMapGrids()[k][k].getY0());
+                        }
                     }
                     winner = 1;
                     return true;
                 } else if(q >= 3) {
-                    for (int k = 0; k < winnerFields.length; k++) {
-                        winnerFields[k] = new Vector2(buttons[k][buttons.length - 1 - k].getX(), buttons[k][buttons.length - 1 - k].getY());
+                    if(buttons != null) {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(buttons[k][buttons.length - 1 - k].getX(), buttons[k][buttons.length - 1 - k].getY());
+                        }
+                    }
+                    else {
+                        for (int k = 0; k < winnerFields.length; k++) {
+                            winnerFields[k] = new Vector2(gameScreen.getMapGrids()[k][mapWidthHeight - 1 - k].getX0(), gameScreen.getMapGrids()[k][mapWidthHeight - 1 - k].getY0());
+                        }
                     }
                     winner = 1;
                     return true;
@@ -413,7 +467,7 @@ public class MapGrid extends Table {
     public byte getWinner(){
         return winner;
     }
-    public void setWinner(boolean hasWinner){
+    public void setHasWinner(boolean hasWinner){
         this.hasWinner = hasWinner;
     }
     public Vector2[] getWinnerFields(){
@@ -427,6 +481,19 @@ public class MapGrid extends Table {
     }
     public Button[][] getButtons(){
         return buttons;
+    }
+
+    public int getTemplateCounter(){
+        return templateCounter;
+    }
+    public void incrementTemplateCounter(){
+        templateCounter++;
+    }
+
+
+    @Override
+    public float getWidth(){
+        return width;
     }
 
 }
