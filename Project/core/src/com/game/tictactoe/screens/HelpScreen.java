@@ -54,6 +54,7 @@ public class HelpScreen extends GameScreen {
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
                 active = false;
                 game.setScreen(new MainMenuScreen(game));

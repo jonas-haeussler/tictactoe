@@ -34,8 +34,10 @@ public class PlayableScreen extends GameScreen {
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
                 active = false;
+                game.btConnected = false;
                 game.setScreen(new MainMenuScreen(game));
             }
         });
@@ -44,6 +46,7 @@ public class PlayableScreen extends GameScreen {
         replayButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
                 active = false;
                 if(kiPlayer > 0){
@@ -70,11 +73,11 @@ public class PlayableScreen extends GameScreen {
         stage.addActor(headingLabel);
         stage.addActor(playerMovementLabel);
         stage.addActor(table);
-        playerMovementLabel.setPosition(Gdx.graphics.getWidth() / 2 - playerMovementLabel.getPrefWidth() / 2, Gdx.graphics.getHeight() / 1.18f - playerMovementLabel.getPrefHeight());
+        playerMovementLabel.setPosition(Gdx.graphics.getWidth() / 2 - playerMovementLabel.getWidth() / 2, Gdx.graphics.getHeight());
         headingLabel.setPosition(Gdx.graphics.getWidth() / 2 - headingLabel.getPrefWidth() / 2, Gdx.graphics.getHeight() - headingLabel.getPrefHeight());
 
 
-        table.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 8);
+        table.setPosition(Gdx.graphics.getWidth() / 2, 0);
     }
 
     public void setPlayer(boolean player){
@@ -110,7 +113,7 @@ public class PlayableScreen extends GameScreen {
         }
         else if(getMapGrid().getTemplateCounter() >= fieldSize * fieldSize){
             if(winnerScreen.getStage() == null) {
-                winnerScreen.setWinner((byte) 1);
+                winnerScreen.setDraw();
                 winnerStage.addActor(winnerScreen);
                 winnerScreen.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
             }

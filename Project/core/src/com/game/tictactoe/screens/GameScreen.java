@@ -47,7 +47,6 @@ public abstract class GameScreen implements Screen {
     protected boolean[][] templateTime;
 
 
-
     public GameScreen(final TicTacToeGame game, final byte kiPlayer1, final byte kiPlayer2, final byte kiLevel){
         this.game = game;
         this.camera = new OrthographicCamera();
@@ -108,7 +107,7 @@ public abstract class GameScreen implements Screen {
         game.batch.setProjectionMatrix(camera.combined);
 
         Gdx.input.setInputProcessor(stage);
-        if(kiPlayer1 > 0) {
+        if(kiPlayer1 > 0 && !game.btConnected) {
             this.ki1 = new KI(mapGrid, mapGrids, kiPlayer1, kiLevel, this, game);
             new Thread(ki1).start();
         }
@@ -173,8 +172,8 @@ public abstract class GameScreen implements Screen {
     }
     public void setPlayer(boolean player){
         this.player = player;
-        synchronized (game) {
-            game.notifyAll();
+        synchronized (this) {
+            this.notifyAll();
         }
     }
     public void setActive(int i, int j){
@@ -221,6 +220,9 @@ public abstract class GameScreen implements Screen {
     }
     public boolean hasTotalWinner(){
         return mapGrid.hasWinner();
+    }
+    public int getFieldSize(){
+        return fieldSize;
     }
     @Override
     public void show() {
@@ -277,16 +279,30 @@ public abstract class GameScreen implements Screen {
                     winnerFields = mapGrids[i][j].getWinnerFields();
                     if (winnerFields[0] != null) {
                         drawSmallEllipse(i, j);
+                        if(winnerTime[i][j] <= 0.5f && winnerTime[i][j] >= 0.25f && this instanceof PlayableScreen){
+                            game.fieldSound.stop(game.fieldSoundId);
+                            game.fieldSoundId = game.fieldSound.play(0.2f);
+                        }
                     }
                 }
 
                 // draws a big cross or circle for a won field
                 else if(winnerTime[i][j] >= 1.75f) {
                     if(mapGrids[i][j].getWinner() == 2 && bigAnimation[i][j] <= 2) {
+                        if(bigAnimation[i][j] == 0 && this instanceof PlayableScreen){
+                            game.circleSound.stop(game.circleSoundId);
+                            game.crossSound.stop(game.crossSoundId);
+                            game.circleSoundId = game.circleSound.play(0.2f);
+                        }
                         mapGrids[i][j].drawBigCircle(circleRenderer, transparentRenderer, bigAnimation[i][j]);
                         bigAnimation[i][j] += 2 * delta;
                     }
                     else if(mapGrids[i][j].getWinner() == 1 && bigAnimation[i][j] <= 2){
+                        if(bigAnimation[i][j] == 0 && this instanceof PlayableScreen){
+                            game.crossSound.stop(game.crossSoundId);
+                            game.circleSound.stop(game.circleSoundId);
+                            game.crossSoundId = game.crossSound.play(0.3f);
+                        }
                         mapGrids[i][j].drawBigCross(crossRenderer, transparentRenderer, bigAnimation[i][j]);
                         bigAnimation[i][j] += 4 * delta;
                     }

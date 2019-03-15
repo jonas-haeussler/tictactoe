@@ -27,19 +27,25 @@ public class WinnerScreen extends Table {
         cupImage = new Image(game.cup);
         swordsImage = new Image(game.swords);
         newGameButton = new TextButton("New Game", game.comicSkin);
+        newGameButton.getLabel().setFontScale(1.3f);
         newGameButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
                 game.setScreen(new PlayableScreen(game, gameScreen.getKiPlayer1(), gameScreen.getKiLevel()));
+                game.gameMusic.play();
             }
         });
         menuButton = new TextButton("Back to Menu", game.comicSkin);
+        menuButton.getLabel().setFontScale(1.3f);
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
+                game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
                 game.setScreen(new MainMenuScreen(game));
+                game.gameMusic.play();
             }
         });
 
@@ -54,6 +60,13 @@ public class WinnerScreen extends Table {
     public void winnerAnimation(float delta){
         if(animationTime < 2) {
             clear();
+            if(animationTime == 0){
+                game.circleSound.stop();
+                game.crossSound.stop();
+                game.fieldSound.stop();
+                game.gameMusic.stop();
+                game.winnerMusic.play();
+            }
             animationTime += delta;
             add(cupImage).width(animationTime * Gdx.graphics.getWidth() / 4).height(animationTime * Gdx.graphics.getHeight() / 4);
             row();
@@ -73,12 +86,26 @@ public class WinnerScreen extends Table {
     public void drawAnimation(float delta){
         if(animationTime < 2) {
             clear();
+            if(animationTime == 0){
+                game.circleSound.stop();
+                game.crossSound.stop();
+                game.fieldSound.stop();
+                game.gameMusic.stop();
+                game.drawMusic.play();
+            }
             animationTime += delta;
             add(swordsImage).width(animationTime * Gdx.graphics.getWidth() / 4).height(animationTime * Gdx.graphics.getHeight() / 4);
             row();
             winnerLabel.setFontScale(animationTime / 2);
             add(winnerLabel);
             setPosition(Gdx.graphics.getWidth() / 2 - getWidth() / 2, Gdx.graphics.getHeight() / 2);
+        }
+        else if(newGameButton.getStage() == null){
+            add(newGameButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 12);
+            row();
+        }
+        else if(menuButton.getStage() == null){
+            add(menuButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 12).padTop(50);
         }
     }
 }

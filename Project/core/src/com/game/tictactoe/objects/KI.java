@@ -55,7 +55,6 @@ public class KI implements Runnable {
                                 activeMapGrid.addPlayer2Move(new Vector2(activeMapGrid.getButtons()[x][y].getX(), activeMapGrid.getButtons()[x][y].getY()));
 
                             }
-                            gameScreen.setPlayer(!gameScreen.getPlayer());
                             break;
                         }
                         i++;
@@ -64,11 +63,14 @@ public class KI implements Runnable {
                         activeMapGrid.setActive(false);
                     }
                 }
+                else if(kiLevel == 1){
+                    // hard ki
+                }
             }
             else {
                 try {
                     synchronized (game) {
-                        game.wait();
+                        gameScreen.wait();
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();

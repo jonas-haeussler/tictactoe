@@ -30,7 +30,8 @@ public class AssetLoader {
         game.circleSound = Gdx.audio.newSound(Gdx.files.internal("sounds/circleSound.ogg"));
         game.crossSound = Gdx.audio.newSound(Gdx.files.internal("sounds/crossSound.ogg"));
         game.fieldSound = Gdx.audio.newSound(Gdx.files.internal("sounds/fieldSound.ogg"));
-        game.winnerSound = Gdx.audio.newSound(Gdx.files.internal("sounds/winnerSound.ogg"));
+        game.winnerMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/winnerSound.wav"));
+        game.drawMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/drawSound.wav"));
         game.gameMusic = Gdx.audio.newMusic(Gdx.files.internal("sounds/gameMusic.mp3"));
     }
 

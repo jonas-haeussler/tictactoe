@@ -14,98 +14,91 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.game.tictactoe.TicTacToeGame;
 
-public class MainMenuScreen implements Screen {
+public class TwoPlayerSelectScreen implements Screen {
     private TicTacToeGame game;
-    private OrthographicCamera camera;
     private Label headingLabel;
-    private TextButton singlePlayerButton, twoPlayerButton, onlinePlayerButton, helpButton, exitButton;
+    private TextButton localButton, blueToothButton, onlineButton, menuButton;
     private Table table;
     private Stage stage;
-    public MainMenuScreen(final TicTacToeGame game) {
+    private OrthographicCamera camera;
+
+    public TwoPlayerSelectScreen(final TicTacToeGame game){
         this.game = game;
+        camera = new OrthographicCamera();
+        camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         table = new Table();
 
+
         Label.LabelStyle labelStyle2 = new Label.LabelStyle();
         labelStyle2.font = game.font2;
-        headingLabel = new Label("[RED]T[BLUE]i[RED]c [BLUE]T[RED]a[BLUE]c [RED]T[BLUE]o[RED]e\n [BLUE]o[RED]f\n [BLUE]T[RED]i[BLUE]c [RED]T[BLUE]a[RED]c [BLUE]T[RED]o[BLUE]e[RED]´[BLUE]s"
-                                    , labelStyle2);
+        headingLabel = new Label("[RED]C[BLUE]h[RED]o[BLUE]o[RED]s[BLUE]e\n[RED]o[BLUE]n[RED]e\n[BLUE]O[RED]p" +
+                                        "[BLUE]t[RED]i[BLUE]o[RED]n"
+                , labelStyle2);
         headingLabel.setWrap(true);
         headingLabel.setAlignment(Align.center);
-        singlePlayerButton = new TextButton("Easy Mode", game.comicSkin);
-        singlePlayerButton.getLabel().setFontScale(1.5f);
-        singlePlayerButton.addListener(new ChangeListener() {
+
+        localButton = new TextButton("Local", game.comicSkin);
+        localButton.getLabel().setFontScale(1.5f);
+        localButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
-                byte x = (byte) (Math.random() * 2 + 1);
-                game.setScreen(new PlayableScreen(game, x, (byte) 0));
+                game.setScreen(new PlayableScreen(game, (byte) 0, (byte) 0));
             }
         });
-        twoPlayerButton = new TextButton("Hard Mode", game.comicSkin);
-        twoPlayerButton.getLabel().setFontScale(1.5f);
-        twoPlayerButton.addListener(new ChangeListener() {
+        blueToothButton = new TextButton("Bluetooth", game.comicSkin);
+        blueToothButton.getLabel().setFontScale(1.5f);
+        blueToothButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
-                byte x = (byte) (Math.random() * 2 + 1);
-                game.setScreen(new PlayableScreen(game, x, (byte) 1));
+                synchronized (game) {
+                    game.notifyAll();
+                }
+                game.setScreen(new BTDevicesScreen(game));
+
             }
         });
-        onlinePlayerButton = new TextButton("Two Player Mode", game.comicSkin);
-        onlinePlayerButton.getLabel().setFontScale(1.5f);
-        onlinePlayerButton.addListener(new ChangeListener() {
+        onlineButton = new TextButton("Online", game.comicSkin);
+        onlineButton.getLabel().setFontScale(1.5f);
+        onlineButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
-                game.setScreen(new TwoPlayerSelectScreen(game));
+                game.setScreen(new PlayableScreen(game, (byte) 0, (byte) 0));
             }
         });
-        helpButton = new TextButton("Help", game.comicSkin);
-        helpButton.getLabel().setFontScale(1.5f);
-        helpButton.addListener(new ChangeListener() {
+        menuButton = new TextButton("Back To Menu", game.comicSkin);
+        menuButton.getLabel().setFontScale(1.5f);
+        menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
-                game.setScreen(new HelpScreen(game));
-            }
-        });
-        exitButton = new TextButton("Exit", game.comicSkin);
-        exitButton.getLabel().setFontScale(1.5f);
-        exitButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
-                Gdx.app.exit();
+                game.setScreen(new MainMenuScreen(game));
             }
         });
 
-        table.add(singlePlayerButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10);
+        table.add(localButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10);
         table.row();
-        table.add(twoPlayerButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
+        table.add(blueToothButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
         table.row();
-        table.add(onlinePlayerButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
+        table.add(onlineButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
         table.row();
-        table.add(helpButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
-        table.row();
-        table.add(exitButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
-
-
-
+        table.add(menuButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
 
         stage.addActor(headingLabel);
         stage.addActor(table);
         headingLabel.setPosition(Gdx.graphics.getWidth() / 2 - headingLabel.getWidth() / 2, Gdx.graphics.getHeight() - headingLabel.getPrefHeight());
         table.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2.5f);
 
-        camera = new OrthographicCamera();
-        camera.setToOrtho(false, 1280, 720);
     }
+
 
     @Override
     public void show() {
@@ -124,8 +117,8 @@ public class MainMenuScreen implements Screen {
 
         game.batch.draw(game.background, 0,0, camera.viewportWidth, camera.viewportHeight);
         game.batch.end();
-
-        stage.draw();    }
+        stage.draw();
+    }
 
     @Override
     public void resize(int width, int height) {
@@ -151,4 +144,5 @@ public class MainMenuScreen implements Screen {
     public void dispose() {
 
     }
+
 }

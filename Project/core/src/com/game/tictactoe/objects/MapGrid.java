@@ -157,7 +157,7 @@ public class MapGrid extends Table {
                                                 , x0 + buttons[i][j].getX() + CELL_SIZE / 1.5f
                                                 , y0 + buttons[i][j].getY() + CELL_SIZE / 1.5f
                                                 , 9);
-                    animation[i][j] += 4 * delta;
+                    animation[i][j] += 3 * delta;
                 }
                 else if(mapGrid[i][j] == 1){
                     renderer.rectLine(x0 + buttons[i][j].getX()
@@ -175,7 +175,7 @@ public class MapGrid extends Table {
                                     , x0 + buttons[i][j].getX() + CELL_SIZE / 1.5f
                                     , y0 + buttons[i][j].getY() + CELL_SIZE / 1.5f
                                     , 9);
-                    animation[i][j] += 4 * delta;
+                    animation[i][j] += 3 * delta;
                 }
             }
         }
@@ -227,11 +227,16 @@ public class MapGrid extends Table {
     public boolean addPlayer2Move(Vector2 position){
         if(!gameScreen.hasTotalWinner()) {
             templateCounter++;
+            gameScreen.setPlayer(!gameScreen.getPlayer());
             for (int i = 0; i < buttons.length; i++) {
                 for (int j = 0; j < buttons.length; j++) {
                     if (position.x == (buttons[i][j].getX()) && position.y == (buttons[i][j].getY())) {
                         if (mapGrid[i][j] == 0) {
                             mapGrid[i][j] = 2;
+                            if(gameScreen instanceof PlayableScreen) {
+                                game.circleSound.stop(game.circleSoundId);
+                                game.circleSoundId = game.circleSound.play(0.2f);
+                            }
                             if (player2Win()) {
                                 hasWinner = true;
                                 active = false;
@@ -253,11 +258,17 @@ public class MapGrid extends Table {
     public boolean addPlayer1Move(Vector2 position){
         if(!gameScreen.hasTotalWinner()) {
             templateCounter++;
+            gameScreen.setPlayer(!gameScreen.getPlayer());
             for (int i = 0; i < buttons.length; i++) {
                 for (int j = 0; j < buttons.length; j++) {
                     if (position.x == (buttons[i][j].getX()) && position.y == (buttons[i][j].getY())) {
                         if (mapGrid[i][j] == 0) {
                             mapGrid[i][j] = 1;
+                            if(gameScreen instanceof PlayableScreen) {
+                                game.crossSound.stop(game.crossSoundId);
+                                game.crossSoundId = game.crossSound.play(0.3f);
+                            }
+
                             if (player1Win()) {
                                 hasWinner = true;
                                 active = false;
@@ -268,7 +279,6 @@ public class MapGrid extends Table {
                             } else {
                                 gameScreen.setAllActive(true);
                             }
-
                             return true;
                         }
                     }
@@ -475,6 +485,9 @@ public class MapGrid extends Table {
     }
     public byte[][] getArray(){
         return mapGrid;
+    }
+    public void setArray(byte[][] array){
+        this.mapGrid = array;
     }
     public void dimGrid(ShapeRenderer shapeRenderer){
             shapeRenderer.rect(x0 - width / 11, y0 - height / 11, width, height);
