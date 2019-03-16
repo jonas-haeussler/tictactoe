@@ -55,54 +55,57 @@ public class BlueToothConnection {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if (bluetoothAdapter != null) {
-                        try {
-                            if (serverSocket == null) {
-                                serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(APP_NAME, MY_UUID);
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        BT = true;
-                        if (bluetoothAdapter.isEnabled()) {
-                            launcher.setBT(true);
-                        }
-                    }
-                    System.out.println("hirerere");
-                    socket = null;
-                    // Keep listening until exception occurs or a socket is returned.
-                    while (true) {
-                        if (serverSocket != null) {
-                            try {
-                                System.out.println("Waiting for connection " + MY_UUID);
-                                socket = serverSocket.accept();
-                                System.out.println("Connected");
-                            } catch (IOException e) {
-                                System.out.println("End the serversocket");
-                                break;
-                            }
-                        }
-                        if (socket != null) {
-                            try {
-                                in = socket.getInputStream();
-                                out = socket.getOutputStream();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            playOnBluetooth();
-                            break;
-                        }
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
 
-                    }
+                            if (bluetoothAdapter != null) {
+                                try {
+                                    if (serverSocket == null) {
+                                        serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(APP_NAME, MY_UUID);
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                BT = true;
+                                if (bluetoothAdapter.isEnabled()) {
+                                    launcher.setBT(true);
+                                }
+                            }
+                            System.out.println("hirerere");
+                            socket = null;
+                            // Keep listening until exception occurs or a socket is returned.
+                            while (true) {
+                                if (serverSocket != null) {
+                                    try {
+                                        System.out.println("Waiting for connection " + MY_UUID);
+                                        socket = serverSocket.accept();
+                                        System.out.println("Connected");
+                                    } catch (IOException e) {
+                                        System.out.println("End the serversocket");
+                                        break;
+                                    }
+                                }
+                                if (socket != null) {
+                                    try {
+                                        in = socket.getInputStream();
+                                        out = socket.getOutputStream();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                    playOnBluetooth();
+                                    break;
+                                }
 
+                            }
+                        }
+                    }).start();
                 }
             }
         }).start();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                BluetoothDevice device = null;
-                outerloop:
                 while (true) {
                     try {
                         synchronized (threadCommunicator2) {
@@ -111,56 +114,63 @@ public class BlueToothConnection {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    System.out.println("thread starts");
-                    if (socket == null) {
-                        System.out.println("Adress: " + game.activeBTName);
-                        device = getDevice(game.activeBTName);
-                        try {
-                            if (device != null) {
-                                System.out.println("Found device");
-                                socket = device.createRfcommSocketToServiceRecord(MY_UUID);
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    while (socket != null) {
-                        bluetoothAdapter.cancelDiscovery();
-                        try {
-                            System.out.println("Trying to connect with " + device);
-                            socket.connect();
-                            System.out.println("Connected");
-                            if (serverSocket != null) {
-                                game.isServer = true;
-                            }
-                            in = socket.getInputStream();
-                            out = socket.getOutputStream();
-                            System.out.println("Socket con established");
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            if (socket != null) {
-                                System.out.println("Connection failed " + socket);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            BluetoothDevice device = null;
+                            System.out.println("thread starts");
+                            if (socket == null) {
+                                System.out.println("Adress: " + game.activeBTName);
+                                device = getDevice(game.activeBTName);
                                 try {
-                                    Thread.sleep(2000);
-                                } catch (InterruptedException e1) {
-                                    e1.printStackTrace();
+                                    if (device != null) {
+                                        System.out.println("Found device");
+                                        socket = device.createRfcommSocketToServiceRecord(MY_UUID);
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
                                 }
-                                if (device != null) {
+                            }
+                            while (socket != null) {
+                                bluetoothAdapter.cancelDiscovery();
+                                try {
+                                    System.out.println("Trying to connect with " + device);
+                                    socket.connect();
+                                    System.out.println("Connected");
+                                    if (serverSocket != null) {
+                                        game.isServer = true;
+                                    }
+                                    in = socket.getInputStream();
+                                    out = socket.getOutputStream();
+                                    System.out.println("Socket con established");
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                    if (socket != null) {
+                                        System.out.println("Connection failed " + socket);
+                                        try {
+                                            Thread.sleep(2000);
+                                        } catch (InterruptedException e1) {
+                                            e1.printStackTrace();
+                                        }
+                                        if (device != null) {
 //                                    try {
 //                                        socket = device.createRfcommSocketToServiceRecord(MY_UUID);
 //                                    } catch (IOException e1) {
 //                                        e1.printStackTrace();
 //                                    }
-                                    continue;
+                                            continue;
+                                        }
+                                    }
+                                    return;
+
                                 }
+                                receiveData();
+                                playOnBluetooth();
+
                             }
-                            continue outerloop;
-
                         }
-                        receiveData();
-                        playOnBluetooth();
+                    }).start();
 
-                    }
                 }
             }
         }).start();
@@ -171,7 +181,6 @@ public class BlueToothConnection {
                 if(game.player == 0){
                     game.player = 2;
                 }
-
                 game.btConnected = true;
                 if(game.getScreen() instanceof PlayableScreen) {
                     synchronized ((PlayableScreen) game.getScreen()) {

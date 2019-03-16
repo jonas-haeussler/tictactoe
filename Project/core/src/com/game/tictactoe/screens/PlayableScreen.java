@@ -20,9 +20,10 @@ public class PlayableScreen extends GameScreen {
     private Label headingLabel;
     private Label playerMovementLabel, connectionFailedLabel;
     private WinnerScreen winnerScreen;
-    private ShapeRenderer dimRenderer;
-    private Stage winnerStage, overLayStage1;
-    private float animation;
+    protected ShapeRenderer dimRenderer;
+    private Stage winnerStage;
+    protected Stage overLayStage1;
+    protected float animation;
     public PlayableScreen(final TicTacToeGame game, final byte kiPlayer, final byte kiLevel) {
         super(game, kiPlayer, (byte) 0,  kiLevel);
         table = new Table();
@@ -41,11 +42,11 @@ public class PlayableScreen extends GameScreen {
                 game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
                 active = false;
-                game.btConnected = false;
                 game.player = 0;
                 synchronized (game){
                     game.notifyAll();
                 }
+                game.btConnected = false;
                 game.setScreen(new MainMenuScreen(game));
             }
         });
@@ -62,11 +63,11 @@ public class PlayableScreen extends GameScreen {
                     game.setScreen(new PlayableScreen(game, x, kiLevel));
                 }
                 else if(game.btConnected){
-                    game.btConnected = false;
                     game.player = 0;
                     synchronized (game){
                         game.notifyAll();
                     }
+                    game.btConnected = false;
                     game.setScreen(new BTDevicesScreen(game));
                 }
                 else {
@@ -80,11 +81,11 @@ public class PlayableScreen extends GameScreen {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
-                game.btConnected = false;
                 game.player = 0;
                 synchronized (game){
                     game.notifyAll();
                 }
+                game.btConnected = false;
                 game.getScreen().dispose();
                 game.setScreen(new BTDevicesScreen(game));
             }
@@ -169,24 +170,7 @@ public class PlayableScreen extends GameScreen {
                 winnerStage.draw();
             }
         }
-        if(game.btOn && !game.btConnected){
-            dimRenderer.setProjectionMatrix(camera.combined);
-            Gdx.gl.glEnable(GL20.GL_BLEND);
-            Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
-            dimRenderer.begin(ShapeRenderer.ShapeType.Filled);
-            dimRenderer.rect(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-            dimRenderer.end();
-            overLayStage1.draw();
-            if(animation < 1) {
-                animation += delta;
-            }
-            else{
-                animation = 0;
-            }
-            if(Gdx.input.getInputProcessor().equals(stage)){
-                Gdx.input.setInputProcessor(overLayStage1);
-            }
-        }
+
     }
     @Override
     public void resize(int width, int height){

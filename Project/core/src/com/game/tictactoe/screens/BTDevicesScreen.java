@@ -256,7 +256,7 @@ public class BTDevicesScreen implements Screen, Runnable {
         synchronized (game) {
             if (game.btConnected && game.getScreen() instanceof BTDevicesScreen) {
                 game.getScreen().dispose();
-                PlayableScreen playableScreen = new PlayableScreen(game, game.player, (byte) 0);
+                BTPlayableScreen playableScreen = new BTPlayableScreen(game, game.player, (byte) 0);
                 game.setScreen(playableScreen);
             }
         }
