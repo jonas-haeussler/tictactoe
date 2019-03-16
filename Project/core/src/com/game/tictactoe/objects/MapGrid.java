@@ -233,6 +233,7 @@ public class MapGrid extends Table {
                     if (position.x == (buttons[i][j].getX()) && position.y == (buttons[i][j].getY())) {
                         if (mapGrid[i][j] == 0) {
                             mapGrid[i][j] = 2;
+                            System.out.println("move finished");
                             if(gameScreen instanceof PlayableScreen) {
                                 game.circleSound.stop(game.circleSoundId);
                                 game.circleSoundId = game.circleSound.play(0.2f);

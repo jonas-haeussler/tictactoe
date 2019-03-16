@@ -22,12 +22,18 @@ public class FieldListener extends ChangeListener {
         if(mapGrid.isActive() && !mapGrid.hasWinner()) {
             Vector2 position = new Vector2(actor.getX(), actor.getY());
                 if (playableScreen.getPlayer() && !(playableScreen.getKiPlayer1() == 2)) {
-                    if(mapGrid.addPlayer2Move(position)){
+                    if(mapGrid.addPlayer2Move(position)) {
+                        synchronized (playableScreen){
+                            playableScreen.notifyAll();
+                           }
                     }
 
                 }
                 else if(!playableScreen.getPlayer() && !(playableScreen.getKiPlayer1() == 1)){
                     if(mapGrid.addPlayer1Move(position)){
+                        synchronized (playableScreen){
+                            playableScreen.notifyAll();
+                        }
                     }
                 }
         }

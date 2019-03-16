@@ -43,7 +43,8 @@ public class BlueToothConnection {
         this.launcher = launcher;
         this.requestCode =requestCode;
 
-        new Thread(new Runnable() {
+
+            new Thread(new Runnable() {
             @Override
             public void run() {
                 while (true) {
@@ -54,14 +55,16 @@ public class BlueToothConnection {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    if(bluetoothAdapter != null){
+                    if (bluetoothAdapter != null) {
                         try {
-                            serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(APP_NAME, MY_UUID);
+                            if (serverSocket == null) {
+                                serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(APP_NAME, MY_UUID);
+                            }
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                         BT = true;
-                        if(bluetoothAdapter.isEnabled()){
+                        if (bluetoothAdapter.isEnabled()) {
                             launcher.setBT(true);
                         }
                     }
@@ -69,7 +72,7 @@ public class BlueToothConnection {
                     socket = null;
                     // Keep listening until exception occurs or a socket is returned.
                     while (true) {
-                        if(serverSocket != null) {
+                        if (serverSocket != null) {
                             try {
                                 System.out.println("Waiting for connection " + MY_UUID);
                                 socket = serverSocket.accept();
@@ -83,7 +86,7 @@ public class BlueToothConnection {
                             try {
                                 in = socket.getInputStream();
                                 out = socket.getOutputStream();
-                            } catch(IOException e){
+                            } catch (IOException e) {
                                 e.printStackTrace();
                             }
                             playOnBluetooth();
@@ -154,6 +157,7 @@ public class BlueToothConnection {
                             continue outerloop;
 
                         }
+                        receiveData();
                         playOnBluetooth();
 
                     }
@@ -164,70 +168,128 @@ public class BlueToothConnection {
     }
     private void playOnBluetooth(){
             do {
-                if (serverSocket != null) {
+                if(game.player == 0){
                     game.player = 2;
-                } else {
-                    game.player = 1;
                 }
+
                 game.btConnected = true;
-                if (game.getTurn() ^ game.player == 1) { //player 2 on turn
-                    System.out.println("Player 2 plays now");
+                if(game.getScreen() instanceof PlayableScreen) {
+                    synchronized ((PlayableScreen) game.getScreen()) {
+                        try {
+                            ((PlayableScreen) game.getScreen()).wait();
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    System.out.println("Sending");
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     for (int i = 0; i < game.getFieldSize(); i++) {
                         for (int j = 0; j < game.getFieldSize(); j++) {
                             for (int k = 0; k < game.getFieldSize(); k++) {
                                 for (int l = 0; l < game.getFieldSize(); l++) {
                                     try {
-                                        if(game.getMapGrids() != null) {
-                                            out.write(game.getMapGrids()[i][j].getArray()[k][l]);
-                                        }
-                                        else {
-                                            out.write(0);
+                                        MapGrid[][] mapGrids = game.getMapGrids();
+                                        if (mapGrids != null) {
+                                            System.out.print(mapGrids[i][j].getArray()[k][l]);
+                                            out.write(mapGrids[i][j].getArray()[k][l]);
                                         }
                                     } catch (IOException e) {
-                                        e.printStackTrace();
+                                        game.btConnected = false;
+                                        System.out.println("Connection failed");
                                     }
                                 }
+                                System.out.println();
                             }
 
                         }
                     }
                     try {
                         out.flush();
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                } else { // player 1 on turn
-                    System.out.println("Player 1 plays now");
+                    System.out.println("Receiving");
                     MapGrid[][] originalMapGrids = game.getMapGrids();
                     for (int i = 0; i < game.getFieldSize(); i++) {
                         for (int j = 0; j < game.getFieldSize(); j++) {
                             for (int k = 0; k < game.getFieldSize(); k++) {
                                 for (int l = 0; l < game.getFieldSize(); l++) {
                                     try {
-                                        if(originalMapGrids != null) {
-                                            if ((byte) in.read() != originalMapGrids[i][j].getArray()[k][l]) {
-                                                game.addPlayerMove(i, j, k, l);
+                                        if (originalMapGrids != null) {
+                                            int temp = in.read();
+                                            if (temp != -1) {
+//                                            System.out.print(temp);
+                                                if ((byte) temp != originalMapGrids[i][j].getArray()[k][l]) {
+                                                    game.addPlayerMove(i, j, k, l);
+                                                }
                                             }
                                         }
                                         else {
-                                            System.out.println(in.read());
+                                            game.btConnected = false;
+                                            return;
                                         }
                                     } catch (IOException e) {
-                                        e.printStackTrace();
+                                        game.btConnected = false;
+                                        System.out.println("Connection failed");
                                     }
                                 }
+                                System.out.println();
                             }
 
                         }
                     }
                 }
-                System.out.println("Finished reading");
             } while (game.btConnected);
+    }
+    private void receiveData(){
+        game.player = 1;
+        game.btConnected = true;
+        System.out.println("Receiving");
+        MapGrid[][] originalMapGrids = null;
+        while(originalMapGrids == null){
+            originalMapGrids = game.getMapGrids();
+        }
+        for (int i = 0; i < game.getFieldSize(); i++) {
+            for (int j = 0; j < game.getFieldSize(); j++) {
+                for (int k = 0; k < game.getFieldSize(); k++) {
+                    for (int l = 0; l < game.getFieldSize(); l++) {
+                        try {
+                            if(originalMapGrids != null) {
+                                int temp = in.read();
+                                if(temp != -1) {
+//                                System.out.print(temp);
+                                    if ((byte) temp != originalMapGrids[i][j].getArray()[k][l]) {
+                                        game.addPlayerMove(i, j, k, l);
+                                    }
+                                }
+                                else {
+                                    game.btConnected = false;
+                                    return;
+                                }
+                            }
+                        } catch (IOException e) {
+                            System.out.println("Connection timed out");
+                            game.btConnected = false;
+                        }
+                    }
+                    System.out.println();
+                }
+
+            }
+        }
     }
     public void onBluetoothMode(){
         if(bluetoothAdapter != null && !bluetoothAdapter.isEnabled()){
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             launcher.startActivityForResult(enableBtIntent, requestCode);
+        }
+        else if(bluetoothAdapter != null && bluetoothAdapter.isEnabled()){
+            game.btOn = true;
         }
     }
     public ArrayList<String>[] getDevices() {
@@ -254,7 +316,7 @@ public class BlueToothConnection {
         try {
             if(serverSocket != null){
                 serverSocket.close();
-                serverSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(bluetoothAdapter.getName(), UUID.randomUUID());
+                serverSocket = null;
             }
             if(socket != null){
                 socket.close();

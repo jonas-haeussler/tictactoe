@@ -92,7 +92,6 @@ public class BTDevicesScreen implements Screen, Runnable {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
-                overLaymode2 = true;
                 synchronized (thread) {
                     if (!thread.isAlive()) {
                         try {
@@ -102,6 +101,7 @@ public class BTDevicesScreen implements Screen, Runnable {
                         }
                     }
                 }
+                overLaymode2 = true;
                 Gdx.input.setInputProcessor(overLayStage2);
             }
         });
@@ -220,7 +220,9 @@ public class BTDevicesScreen implements Screen, Runnable {
 
         game.batch.draw(game.background, 0,0, camera.viewportWidth, camera.viewportHeight);
         game.batch.end();
-        stage.draw();
+        synchronized (game) {
+            stage.draw();
+        }
         if(overLaymode2) {
             dimRenderer.setProjectionMatrix(camera.combined);
             Gdx.gl.glEnable(GL20.GL_BLEND);
@@ -300,6 +302,7 @@ public class BTDevicesScreen implements Screen, Runnable {
              }
             }
             if (game.btDevices.size() != devicesButtons.size()) {
+                System.out.println("device update");
                 devicesButtons.clear();
                 synchronized (game) {
                     overlayTable.clear();

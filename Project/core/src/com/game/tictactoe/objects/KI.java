@@ -69,7 +69,7 @@ public class KI implements Runnable {
             }
             else {
                 try {
-                    synchronized (game) {
+                    synchronized (gameScreen) {
                         gameScreen.wait();
                     }
                 } catch (InterruptedException e) {

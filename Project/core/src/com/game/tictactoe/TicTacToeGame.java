@@ -38,6 +38,7 @@ public class TicTacToeGame extends Game {
 	public String activeBTName;
 	public Object threadCommunicator1, threadCommunicator2;
 	public byte player;
+	private MapGrid[][] mapGrids;
 
 	public BitmapFont createFont(FreeTypeFontGenerator ftfg, int size) {
 		FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -90,6 +91,7 @@ public class TicTacToeGame extends Game {
 						, ((PlayableScreen) screen).getMapGrids()[i][j].getButtons()[k][l].getY()));
 			}
 		}
+		System.out.println("Player move made");
 	}
 
 

@@ -33,7 +33,17 @@ public class WinnerScreen extends Table {
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
-                game.setScreen(new PlayableScreen(game, gameScreen.getKiPlayer1(), gameScreen.getKiLevel()));
+                if(!game.btConnected) {
+                    game.setScreen(new PlayableScreen(game, gameScreen.getKiPlayer1(), gameScreen.getKiLevel()));
+                }
+                else {
+                    game.btConnected = false;
+                    game.player = 0;
+                    synchronized (game){
+                        game.notifyAll();
+                    }
+                    game.setScreen(new BTDevicesScreen(game));
+                }
                 game.gameMusic.play();
             }
         });
@@ -44,6 +54,11 @@ public class WinnerScreen extends Table {
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
+                game.btConnected = false;
+                game.player = 0;
+                synchronized (game){
+                    game.notifyAll();
+                }
                 game.setScreen(new MainMenuScreen(game));
                 game.gameMusic.play();
             }
