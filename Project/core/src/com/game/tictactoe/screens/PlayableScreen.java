@@ -10,26 +10,22 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.game.tictactoe.TicTacToeGame;
 
 public class PlayableScreen extends GameScreen {
-    private Table table, overLayRootTable1;
-    private TextButton menuButton, replayButton, backFromWaitButton;
+    private Table table;
+    private TextButton menuButton, replayButton;
     private Label headingLabel;
-    private Label playerMovementLabel, connectionFailedLabel;
+    private Label playerMovementLabel;
     private WinnerScreen winnerScreen;
     protected ShapeRenderer dimRenderer;
     private Stage winnerStage;
-    protected Stage overLayStage1;
     protected float animation;
     public PlayableScreen(final TicTacToeGame game, final byte kiPlayer, final byte kiLevel) {
         super(game, kiPlayer, (byte) 0,  kiLevel);
         table = new Table();
         winnerStage = new Stage(new ScreenViewport());
-        overLayRootTable1 = new Table();
-        overLayStage1 = new Stage();
         dimRenderer = new ShapeRenderer();
         dimRenderer.setAutoShapeType(true);
         dimRenderer.setColor(new Color(0, 0, 0, 0.5f));
@@ -43,10 +39,10 @@ public class PlayableScreen extends GameScreen {
                 game.getScreen().dispose();
                 active = false;
                 game.player = 0;
-                synchronized (game){
-                    game.notifyAll();
-                }
                 game.btConnected = false;
+                if(game.conHandler != null){
+                    game.conHandler.cancel();
+                }
                 game.setScreen(new MainMenuScreen(game));
             }
         });
@@ -62,11 +58,10 @@ public class PlayableScreen extends GameScreen {
                     byte x = (byte) (Math.random() * 2 + 1);
                     game.setScreen(new PlayableScreen(game, x, kiLevel));
                 }
-                else if(game.btConnected){
+                else if(game.conHandler != null){
                     game.player = 0;
-                    synchronized (game){
-                        game.notifyAll();
-                    }
+                    game.conHandler.cancel();
+                    game.conHandler.enableConnection();
                     game.btConnected = false;
                     game.setScreen(new BTDevicesScreen(game));
                 }
@@ -75,50 +70,28 @@ public class PlayableScreen extends GameScreen {
                 }
             }
         });
-        backFromWaitButton = new TextButton("Back", game.comicSkin);
-        backFromWaitButton.getLabel().setFontScale(1.5f);
-        backFromWaitButton.addListener(new ChangeListener() {
-            @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
-                game.player = 0;
-                synchronized (game){
-                    game.notifyAll();
-                }
-                game.btConnected = false;
-                game.getScreen().dispose();
-                game.setScreen(new BTDevicesScreen(game));
-            }
-        });
+
         Label.LabelStyle labelStyle1 = new Label.LabelStyle();
         labelStyle1.font = game.font1;
         labelStyle1.fontColor = Color.BLACK;
         Label.LabelStyle labelStyle2 = new Label.LabelStyle();
         labelStyle2.font = game.font2;
-        Label.LabelStyle labelStyle3 = new Label.LabelStyle();
-        labelStyle3.font = game.font1;
-        labelStyle3.fontColor = Color.WHITE;
-        connectionFailedLabel = new Label("Connection failed..."
-                , labelStyle3);
-        connectionFailedLabel.setAlignment(Align.center);
         playerMovementLabel = new Label("Player 1", labelStyle1);
         headingLabel = new Label("[RED]L[BLUE]e[RED]t[BLUE]´[RED]s [BLUE]T[RED]i[BLUE]c [RED]T[BLUE]a[RED]c [BLUE]T[RED]o[BLUE]e", labelStyle2);
+        Table labelTable = new Table();
+        labelTable.add(headingLabel);
+        labelTable.row();
+        labelTable.add(playerMovementLabel);
         table.add(replayButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 12);
         table.row().height(Gdx.graphics.getHeight() / 20);
-        table.add(menuButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 12);
+        table.add(menuButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 12).padBottom(200);
 
-        overLayRootTable1.add(connectionFailedLabel).width(Gdx.graphics.getWidth() / 1.5f);
-        overLayRootTable1.row();
-        overLayRootTable1.add(backFromWaitButton).width(Gdx.graphics.getWidth() / 1.2f).height(Gdx.graphics.getHeight() / 8).padTop(50);
-        stage.addActor(headingLabel);
-        stage.addActor(playerMovementLabel);
+        stage.addActor(labelTable);
         stage.addActor(table);
-        overLayStage1.addActor(overLayRootTable1);
-        overLayRootTable1.setPosition(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f);
-        playerMovementLabel.setPosition(Gdx.graphics.getWidth() / 2 - playerMovementLabel.getWidth() / 2, Gdx.graphics.getHeight());
-        headingLabel.setPosition(Gdx.graphics.getWidth() / 2 - headingLabel.getPrefWidth() / 2, Gdx.graphics.getHeight() - headingLabel.getPrefHeight());
 
 
+
+        labelTable.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() - labelTable.getPrefHeight() / 2);
         table.setPosition(Gdx.graphics.getWidth() / 2, 0);
     }
 
@@ -137,7 +110,7 @@ public class PlayableScreen extends GameScreen {
         super.render(delta);
         if(getMapGrid().hasWinner()){
             if(winnerScreen.getStage() == null) {
-                winnerScreen.setWinner(getMapGrid().getWinner());
+                winnerScreen.setWinner(getMapGrid().getWinner(), (getKiPlayer1() == 0) || getKiPlayer1() != getMapGrid().getWinner());
                 winnerStage.addActor(winnerScreen);
                 Gdx.input.setInputProcessor(winnerStage);
                 winnerScreen.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);

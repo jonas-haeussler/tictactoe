@@ -56,11 +56,12 @@ public class TwoPlayerSelectScreen implements Screen {
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
-                synchronized (game) {
-                    game.notifyAll();
+                if (game.conHandler != null) {
+                    game.conHandler.cancel();
+                    if (game.conHandler.enableConnection()) {
+                        game.setScreen(new BTDevicesScreen(game));
+                    }
                 }
-                game.setScreen(new BTDevicesScreen(game));
-
             }
         });
         onlineButton = new TextButton("Online", game.comicSkin);

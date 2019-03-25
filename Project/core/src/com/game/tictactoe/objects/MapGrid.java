@@ -43,7 +43,7 @@ public class MapGrid extends Table {
         mapGrid = new byte[mapWidthHeight][mapWidthHeight];
         CELL_SIZE = width / (mapWidthHeight);
         x0 = 0;
-        y0 = height / 2 - width / 2;
+        y0 = height / 2 - width / 2.7f;
 
     }
 
@@ -226,14 +226,13 @@ public class MapGrid extends Table {
 
     public boolean addPlayer2Move(Vector2 position){
         if(!gameScreen.hasTotalWinner()) {
-            templateCounter++;
-            gameScreen.setPlayer(!gameScreen.getPlayer());
             for (int i = 0; i < buttons.length; i++) {
                 for (int j = 0; j < buttons.length; j++) {
                     if (position.x == (buttons[i][j].getX()) && position.y == (buttons[i][j].getY())) {
                         if (mapGrid[i][j] == 0) {
                             mapGrid[i][j] = 2;
-                            System.out.println("move finished");
+                            templateCounter++;
+                            gameScreen.setPlayer(!gameScreen.getPlayer());
                             if(gameScreen instanceof PlayableScreen) {
                                 game.circleSound.stop(game.circleSoundId);
                                 game.circleSoundId = game.circleSound.play(0.2f);
@@ -258,13 +257,13 @@ public class MapGrid extends Table {
     }
     public boolean addPlayer1Move(Vector2 position){
         if(!gameScreen.hasTotalWinner()) {
-            templateCounter++;
-            gameScreen.setPlayer(!gameScreen.getPlayer());
             for (int i = 0; i < buttons.length; i++) {
                 for (int j = 0; j < buttons.length; j++) {
                     if (position.x == (buttons[i][j].getX()) && position.y == (buttons[i][j].getY())) {
                         if (mapGrid[i][j] == 0) {
                             mapGrid[i][j] = 1;
+                            templateCounter++;
+                            gameScreen.setPlayer(!gameScreen.getPlayer());
                             if(gameScreen instanceof PlayableScreen) {
                                 game.crossSound.stop(game.crossSoundId);
                                 game.crossSoundId = game.crossSound.play(0.3f);

@@ -13,9 +13,10 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.game.tictactoe.objects.MapGrid;
 import com.game.tictactoe.screens.MainMenuScreen;
 import com.game.tictactoe.screens.PlayableScreen;
+import com.game.tictactoe.utils.AdShower;
 import com.game.tictactoe.utils.AssetLoader;
+import com.game.tictactoe.utils.ConnectionHandler;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class TicTacToeGame extends Game {
@@ -36,9 +37,11 @@ public class TicTacToeGame extends Game {
 	public ArrayList<String> btDevices;
 	public ArrayList<String> btDeviceAdresses;
 	public String activeBTName;
-	public Object threadCommunicator1, threadCommunicator2;
 	public byte player;
 	private MapGrid[][] mapGrids;
+	public ConnectionHandler conHandler;
+	public AdShower adShower;
+
 
 	public BitmapFont createFont(FreeTypeFontGenerator ftfg, int size) {
 		FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
@@ -49,17 +52,14 @@ public class TicTacToeGame extends Game {
 		btDevices = devices[0];
 		btDeviceAdresses = devices[1];
 	}
+	public void setConHandler(ConnectionHandler conHandler){
+		this.conHandler = conHandler;
+	}
 	public void setActiveBtDevice(String name){
 		activeBTName = name;
-		synchronized (threadCommunicator2) {
-			threadCommunicator2.notifyAll();
-		}
+		conHandler.startClient();
 	}
-	public TicTacToeGame(Object threadCommunicator1, Object threadCommunicator2){
-		super();
-		this.threadCommunicator1 = threadCommunicator1;
-		this.threadCommunicator2 = threadCommunicator2;
-	}
+
 	public boolean getTurn(){
 		if(screen instanceof PlayableScreen){
 			return ((PlayableScreen)screen).getPlayer();
@@ -91,17 +91,18 @@ public class TicTacToeGame extends Game {
 						, ((PlayableScreen) screen).getMapGrids()[i][j].getButtons()[k][l].getY()));
 			}
 		}
-		System.out.println("Player move made");
+//		System.out.println("Player move made");
 	}
 
 
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
+//		Gdx.input.setCatchBackKey(true);
 		loader = new AssetLoader(this);
 		loader.loadAll();
-		font1 = createFont(generator1, (int) (Gdx.graphics.getWidth() / 10f));
-		font2 = createFont(generator2, (int) (Gdx.graphics.getWidth() / 8f));
+		font1 = createFont(generator1, (int) (Gdx.graphics.getWidth() / 12f));
+		font2 = createFont(generator2, (int) (Gdx.graphics.getWidth() / 10f));
 		font3 = createFont(generator3, (int) (Gdx.graphics.getWidth() / 8f));
 		font2.getData().markupEnabled = true;
 

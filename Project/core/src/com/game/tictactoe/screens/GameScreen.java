@@ -95,7 +95,7 @@ public abstract class GameScreen implements Screen {
         crossRenderer = new ShapeRenderer();
         crossRenderer.setAutoShapeType(true);
         crossRenderer.setColor(Color.RED);
-        Gdx.gl.glLineWidth(40);
+        Gdx.gl.glLineWidth(50);
         ellipseRenderer = new ShapeRenderer();
         ellipseRenderer.setAutoShapeType(true);
         ellipseRenderer.setColor(Color.GREEN);
@@ -115,6 +115,9 @@ public abstract class GameScreen implements Screen {
             this.ki2 = new KI(mapGrid, mapGrids, kiPlayer2, kiLevel, this, game);
             new Thread(ki2).start();
         }
+
+        // debugging
+
 
     }
     private void drawSmallEllipse(int i, int j) {
@@ -151,17 +154,17 @@ public abstract class GameScreen implements Screen {
                     , mapGrid.getCELL_SIZE(), 90f);
         } else if (winnerFields[0].y == winnerFields[1].y) {
             ellipseRenderer.ellipse(mapGrid.getX0() + winnerFields[0].x
-                    , mapGrid.getY0() + winnerFields[0].y - mapGrid.getCELL_SIZE() * 1.5f
+                    , mapGrid.getY0() + winnerFields[0].y - mapGrid.getCELL_SIZE() * 1.2f
                     , mapGrid.getWidth()
                     , mapGrid.getCELL_SIZE());
         } else if (winnerFields[0].x > winnerFields[1].x) {
             ellipseRenderer.ellipse(mapGrid.getX0() + winnerFields[0].x - mapGrid.getWidth() * 0.85f
-                    , mapGrid.getY0() + winnerFields[0].y - mapGrid.getWidth() * 0.85f
+                    , mapGrid.getY0() + winnerFields[0].y - mapGrid.getWidth() * 0.65f
                     , mapGrid.getWidth() * 1.3f
                     , mapGrid.getCELL_SIZE() * 1.1f, 45f);
         } else if (winnerFields[0].x < winnerFields[1].x) {
             ellipseRenderer.ellipse(mapGrid.getX0() + winnerFields[0].x - mapGrid.getCELL_SIZE() * 0.5f
-                    , mapGrid.getY0() + winnerFields[0].y - mapGrid.getWidth() * 0.9f
+                    , mapGrid.getY0() + winnerFields[0].y - mapGrid.getWidth() * 0.65f
                     , mapGrid.getWidth() * 1.3f
                     , mapGrid.getCELL_SIZE() * 1.1f, 135f);
         }
@@ -238,7 +241,7 @@ public abstract class GameScreen implements Screen {
         game.batch.end();
         transparentRenderer.setProjectionMatrix(camera.combined);
         transparentRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        transparentRenderer.rect(0, Gdx.graphics.getHeight() / 2 - Gdx.graphics.getWidth() / 2, Gdx.graphics.getWidth(), mapGrid.getCELL_SIZE() * 3);
+        transparentRenderer.rect(0, Gdx.graphics.getHeight() / 2 - Gdx.graphics.getWidth() / 2.7f, Gdx.graphics.getWidth(), mapGrid.getCELL_SIZE() * 3);
         transparentRenderer.end();
 
         renderer.setProjectionMatrix(camera.combined);
@@ -250,7 +253,7 @@ public abstract class GameScreen implements Screen {
         circleRenderer.begin(ShapeRenderer.ShapeType.Filled);
         dimRenderer.setProjectionMatrix(camera.combined);
         dimRenderer.begin(ShapeRenderer.ShapeType.Filled);
-        dimRenderer.setColor(new Color(0, 0, 0, 0.5f));
+        dimRenderer.setColor(new Color(0, 0, 0, 0.3f));
         mapGrid.drawMap(renderer, 15);
         for (int i = 0; i < fieldSize; i++) {
             for (int j = 0; j < fieldSize; j++) {
@@ -260,7 +263,7 @@ public abstract class GameScreen implements Screen {
                     mapGrids[i][j].drawCircles(circleRenderer, transparentRenderer, animation[i][j], delta);
                     mapGrids[i][j].drawCrosses(crossRenderer, transparentRenderer, animation[i][j], delta);
                     // dims the non active fields
-                    if(!mapGrids[i][j].isActive() && !mapGrids[i][j].hasWinner()){
+                    if(!mapGrids[i][j].isActive() || isFull(i, j)){
                         Gdx.gl.glEnable(GL20.GL_BLEND);
                         Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
                         mapGrids[i][j].dimGrid(dimRenderer);
@@ -355,7 +358,7 @@ public abstract class GameScreen implements Screen {
             ellipseRenderer.setProjectionMatrix(camera.combined);
             winnerFields = mapGrid.getWinnerFields();
             if (winnerFields[0] != null) {
-                drawBigEllipse();
+//                drawBigEllipse();
 
             }
         }

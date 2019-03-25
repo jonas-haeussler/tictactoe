@@ -16,6 +16,7 @@ public class WinnerScreen extends Table {
     private TextButton newGameButton, menuButton;
     private float animationTime;
     private Image cupImage, swordsImage;
+    private boolean playerWins;
 
     public WinnerScreen(final TicTacToeGame game, final GameScreen gameScreen){
         super();
@@ -33,15 +34,13 @@ public class WinnerScreen extends Table {
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
                 game.getScreen().dispose();
+                game.adShower.showInterstitialAd();
                 if(!game.btConnected) {
                     game.setScreen(new PlayableScreen(game, gameScreen.getKiPlayer1(), gameScreen.getKiLevel()));
                 }
                 else {
                     game.btConnected = false;
                     game.player = 0;
-                    synchronized (game){
-                        game.notifyAll();
-                    }
                     game.setScreen(new BTDevicesScreen(game));
                 }
                 game.gameMusic.play();
@@ -56,9 +55,7 @@ public class WinnerScreen extends Table {
                 game.getScreen().dispose();
                 game.btConnected = false;
                 game.player = 0;
-                synchronized (game){
-                    game.notifyAll();
-                }
+                game.adShower.showInterstitialAd();
                 game.setScreen(new MainMenuScreen(game));
                 game.gameMusic.play();
             }
@@ -66,36 +63,42 @@ public class WinnerScreen extends Table {
 
 
     }
-    public void setWinner(byte winner){
+    public void setWinner(byte winner, boolean playerWins){
         winnerLabel.setText("Player " + winner + " wins!");
+        this.playerWins = playerWins;
     }
     public void setDraw(){
         winnerLabel.setText("Draw!");
     }
     public void winnerAnimation(float delta){
-        if(animationTime < 2) {
-            clear();
-            if(animationTime == 0){
-                game.circleSound.stop();
-                game.crossSound.stop();
-                game.fieldSound.stop();
-                game.gameMusic.stop();
-                game.winnerMusic.play();
+        if(playerWins) {
+            if (animationTime < 2) {
+                clear();
+                if (animationTime == 0) {
+                    game.circleSound.stop();
+                    game.crossSound.stop();
+                    game.fieldSound.stop();
+                    game.gameMusic.stop();
+                    game.winnerMusic.play();
+                }
+                animationTime += delta;
+                add(cupImage).width(animationTime * Gdx.graphics.getWidth() / 4).height(animationTime * Gdx.graphics.getHeight() / 4);
+                row();
+                winnerLabel.setFontScale(animationTime / 2);
+                add(winnerLabel);
+                row();
+                setPosition(Gdx.graphics.getWidth() / 2 - getWidth() / 2, Gdx.graphics.getHeight() / 2);
+            } else if (newGameButton.getStage() == null) {
+                add(newGameButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 12);
+                row();
+            } else if (menuButton.getStage() == null) {
+                add(menuButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 12).padTop(50);
             }
-            animationTime += delta;
-            add(cupImage).width(animationTime * Gdx.graphics.getWidth() / 4).height(animationTime * Gdx.graphics.getHeight() / 4);
-            row();
-            winnerLabel.setFontScale(animationTime / 2);
-            add(winnerLabel);
-            row();
-            setPosition(Gdx.graphics.getWidth() / 2 - getWidth() / 2, Gdx.graphics.getHeight() / 2);
         }
-        else if(newGameButton.getStage() == null){
-            add(newGameButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 12);
-            row();
-        }
-        else if(menuButton.getStage() == null){
-            add(menuButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 12).padTop(50);
+        else {
+            winnerLabel.setText("You loose!");
+            winnerLabel.getStyle().fontColor = Color.DARK_GRAY;
+            drawAnimation(delta);
         }
     }
     public void drawAnimation(float delta){
@@ -113,6 +116,7 @@ public class WinnerScreen extends Table {
             row();
             winnerLabel.setFontScale(animationTime / 2);
             add(winnerLabel);
+            row();
             setPosition(Gdx.graphics.getWidth() / 2 - getWidth() / 2, Gdx.graphics.getHeight() / 2);
         }
         else if(newGameButton.getStage() == null){

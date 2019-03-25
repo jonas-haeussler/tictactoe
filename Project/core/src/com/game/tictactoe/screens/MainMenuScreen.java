@@ -1,6 +1,7 @@
 package com.game.tictactoe.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -18,7 +19,7 @@ public class MainMenuScreen implements Screen {
     private TicTacToeGame game;
     private OrthographicCamera camera;
     private Label headingLabel;
-    private TextButton singlePlayerButton, twoPlayerButton, onlinePlayerButton, helpButton, exitButton;
+    private TextButton easyModeButton, hardModeButton, onlinePlayerButton, helpButton, exitButton;
     private Table table;
     private Stage stage;
     public MainMenuScreen(final TicTacToeGame game) {
@@ -33,9 +34,9 @@ public class MainMenuScreen implements Screen {
                                     , labelStyle2);
         headingLabel.setWrap(true);
         headingLabel.setAlignment(Align.center);
-        singlePlayerButton = new TextButton("Easy Mode", game.comicSkin);
-        singlePlayerButton.getLabel().setFontScale(1.5f);
-        singlePlayerButton.addListener(new ChangeListener() {
+        easyModeButton = new TextButton("Easy Mode", game.comicSkin);
+        easyModeButton.getLabel().setFontScale(1.5f);
+        easyModeButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
@@ -44,9 +45,9 @@ public class MainMenuScreen implements Screen {
                 game.setScreen(new PlayableScreen(game, x, (byte) 0));
             }
         });
-        twoPlayerButton = new TextButton("Hard Mode", game.comicSkin);
-        twoPlayerButton.getLabel().setFontScale(1.5f);
-        twoPlayerButton.addListener(new ChangeListener() {
+        hardModeButton = new TextButton("Hard Mode", game.comicSkin);
+        hardModeButton.getLabel().setFontScale(1.5f);
+        hardModeButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
@@ -85,9 +86,9 @@ public class MainMenuScreen implements Screen {
             }
         });
 
-        table.add(singlePlayerButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10);
+        table.add(easyModeButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10);
         table.row();
-        table.add(twoPlayerButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
+        table.add(hardModeButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
         table.row();
         table.add(onlinePlayerButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50);
         table.row();
@@ -101,7 +102,7 @@ public class MainMenuScreen implements Screen {
         stage.addActor(headingLabel);
         stage.addActor(table);
         headingLabel.setPosition(Gdx.graphics.getWidth() / 2 - headingLabel.getWidth() / 2, Gdx.graphics.getHeight() - headingLabel.getPrefHeight());
-        table.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2.5f);
+        table.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2.3f);
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 1280, 720);
@@ -125,7 +126,12 @@ public class MainMenuScreen implements Screen {
         game.batch.draw(game.background, 0,0, camera.viewportWidth, camera.viewportHeight);
         game.batch.end();
 
-        stage.draw();    }
+        stage.draw();
+
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) {
+//            game.appCloser.onBackPressed();
+        }
+    }
 
     @Override
     public void resize(int width, int height) {

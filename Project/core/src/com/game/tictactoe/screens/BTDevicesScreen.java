@@ -65,7 +65,7 @@ public class BTDevicesScreen implements Screen, Runnable {
         Label.LabelStyle labelStyle1 = new Label.LabelStyle();
         labelStyle1.font = game.font1;
         labelStyle1.fontColor = Color.BLACK;
-        overlayHeading = new Label("Select a Device"
+        overlayHeading = new Label("Paired Devices"
                 , labelStyle1);
         overlayHeading.setAlignment(Align.center);
         pleaseWaitLabel = new Label("Please Wait..."
@@ -79,11 +79,11 @@ public class BTDevicesScreen implements Screen, Runnable {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
-                synchronized (game.threadCommunicator1) {
-                    game.threadCommunicator1.notifyAll();
+                if(game.conHandler.enableConnection()) {
+                    game.conHandler.startServer();
+                    overLaymode1 = true;
+                    Gdx.input.setInputProcessor(overLayStage1);
                 }
-                overLaymode1 = true;
-                Gdx.input.setInputProcessor(overLayStage1);
             }
         });
         joinGameButton = new TextButton("Join Game", game.comicSkin);
@@ -92,17 +92,19 @@ public class BTDevicesScreen implements Screen, Runnable {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
                 game.buttonSound.play(0.8f);
-                synchronized (thread) {
-                    if (!thread.isAlive()) {
-                        try {
-                            thread.start();
-                        } catch(IllegalThreadStateException e){
+                if(game.conHandler.enableConnection()) {
+                    synchronized (thread) {
+                        if (!thread.isAlive()) {
+                            try {
+                                thread.start();
+                            } catch (IllegalThreadStateException e) {
 
+                            }
                         }
                     }
+                    overLaymode2 = true;
+                    Gdx.input.setInputProcessor(overLayStage2);
                 }
-                overLaymode2 = true;
-                Gdx.input.setInputProcessor(overLayStage2);
             }
         });
         backButton = new TextButton("Back", game.comicSkin);
@@ -123,9 +125,8 @@ public class BTDevicesScreen implements Screen, Runnable {
                 game.buttonSound.play(0.8f);
                 overLaymode2 = false;
                 Gdx.input.setInputProcessor(stage);
-                synchronized (game){
-                    game.notifyAll();
-                }
+                game.conHandler.cancel();
+                game.conHandler.enableConnection();
             }
         });
         refreshDeviceButton = new TextButton("Refresh", game.comicSkin);
@@ -150,9 +151,8 @@ public class BTDevicesScreen implements Screen, Runnable {
         backFromWaitButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                synchronized (game){
-                    game.notifyAll();
-                }
+                game.conHandler.cancel();
+                game.conHandler.enableConnection();
                 game.buttonSound.play(0.8f);
                 overLaymode1 = false;
                 if(overLaymode2){
@@ -288,19 +288,9 @@ public class BTDevicesScreen implements Screen, Runnable {
     }
 
     @Override
-    public void run() {
-            synchronized (game) {
-                game.notifyAll();
-            }
-            if(!game.btOn) {
-             synchronized (game){
-                 try {
-                     game.wait();
-                 } catch (InterruptedException e) {
-                     e.printStackTrace();
-                 }
-             }
-            }
+    public void run(){
+        game.conHandler.cancel();
+        game.conHandler.enableConnection();
             if (game.btDevices.size() != devicesButtons.size()) {
                 System.out.println("device update");
                 devicesButtons.clear();

@@ -65,7 +65,7 @@ public class HelpScreen extends GameScreen {
         helpStage.addActor(menuButton);
 
 
-        menuButton.setPosition(Gdx.graphics.getWidth() / 2 - menuButton.getWidth() / 2, Gdx.graphics.getHeight() / 20);
+        menuButton.setPosition(Gdx.graphics.getWidth() / 2 - menuButton.getWidth() / 2, Gdx.graphics.getHeight() / 12);
         Gdx.input.setInputProcessor(helpStage);
 
     }
@@ -74,7 +74,7 @@ public class HelpScreen extends GameScreen {
         root.clear();
         final ScrollPane scroll = new ScrollPane(textLabel);
         scroll.setScrollingDisabled(true, false);
-        root.add(scroll).colspan(2).height(height / 2.4f).width(width / 1.2f);
+        root.add(scroll).colspan(2).height(height / 2.6f).width(width / 1.2f);
         root.row();
         root.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 1.45f);
 
