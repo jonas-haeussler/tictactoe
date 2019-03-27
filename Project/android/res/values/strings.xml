@@ -2,5 +2,17 @@
 <resources>
 
     <string name="app_name">TicTacToe of TicTacToe\'s</string>
+    <string name="app_id">44761269932</string>
+    <string name="leaderboard_id">CgkIrI3r36YBEAIQCw</string>
+    <string name="achievement_1_id">CgkIrI3r36YBEAIQAQ</string>
+    <string name="achievement_2_id">CgkIrI3r36YBEAIQAg</string>
+    <string name="achievement_3_id">CgkIrI3r36YBEAIQAw</string>
+    <string name="achievement_4_id">CgkIrI3r36YBEAIQBA</string>
+    <string name="achievement_5_id">CgkIrI3r36YBEAIQBQ</string>
+    <string name="achievement_6_id">CgkIrI3r36YBEAIQBg</string>
+    <string name="achievement_7_id">CgkIrI3r36YBEAIQBw</string>
+
+    <string name="con_failed_message">Connection to Google Services failed!</string>
+
 
 </resources>
