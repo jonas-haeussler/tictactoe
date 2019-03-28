@@ -52,7 +52,9 @@ public class HelpScreen extends GameScreen {
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 active = false;
                 game.setScreen(new MainMenuScreen(game));
@@ -113,5 +115,9 @@ public class HelpScreen extends GameScreen {
         if(getMapGrid().hasWinner() || getMapGrid().getTemplateCounter() >= fieldSize * fieldSize){
             restartAnimation();
         }
+    }
+    @Override
+    public void dispose(){
+        helpStage.dispose();
     }
 }

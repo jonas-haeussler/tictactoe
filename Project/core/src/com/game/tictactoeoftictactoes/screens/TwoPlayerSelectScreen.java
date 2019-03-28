@@ -51,7 +51,9 @@ public class TwoPlayerSelectScreen implements Screen {
         localButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 game.setScreen(new LocalPlayableScreen(game));
             }
@@ -61,12 +63,14 @@ public class TwoPlayerSelectScreen implements Screen {
         blueToothButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
-                game.getScreen().dispose();
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 if (game.conHandler != null) {
                     game.conHandler.cancel();
                     if (game.conHandler.enableConnection()) {
-                        game.setScreen(new com.game.tictactoeoftictactoes.screens.BTDevicesScreen(game));
+                        game.getScreen().dispose();
+                        game.setScreen(new BTDevicesScreen(game));
                     }
                 }
             }
@@ -76,7 +80,9 @@ public class TwoPlayerSelectScreen implements Screen {
         onlineButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 if(game.googleConHandler.loggedIn()) {
                     game.getScreen().dispose();
                     game.setScreen(new OnlineSelectScreen(game));
@@ -91,7 +97,9 @@ public class TwoPlayerSelectScreen implements Screen {
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 game.setScreen(new com.game.tictactoeoftictactoes.screens.MainMenuScreen(game));
             }
@@ -132,6 +140,13 @@ public class TwoPlayerSelectScreen implements Screen {
         game.batch.draw(game.background, 0,0, camera.viewportWidth, camera.viewportHeight);
         game.batch.end();
         stage.draw();
+
+        if(game.invitation){
+            dispose();
+            game.setScreen(new OnlineSelectScreen(game));
+            ((OnlineSelectScreen)game.getScreen()).setOverLaymode(true);
+            game.invitation = false;
+        }
     }
 
     @Override
@@ -146,7 +161,7 @@ public class TwoPlayerSelectScreen implements Screen {
 
     @Override
     public void resume() {
-        if(game.gameMusic != null && !game.gameMusic.isPlaying()){
+        if(game.gameMusic != null && !game.gameMusic.isPlaying() && !game.muteSound){
             game.gameMusic.play();
         }
     }
@@ -158,7 +173,7 @@ public class TwoPlayerSelectScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        stage.dispose();
     }
 
 }

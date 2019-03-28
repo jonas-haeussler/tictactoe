@@ -18,6 +18,8 @@ public class AssetLoader {
         game.background = new Texture("PNG/squaredPaper.png");
         game.cup = new Texture("PNG/cup.png");
         game.swords = new Texture("PNG/swords.png");
+        game.muteSoundTexture = new Texture("PNG/muteSound.png");
+        game.playSoundTexture = new Texture("PNG/playSound.png");
         game.comicSkin = new Skin(Gdx.files.internal("skin/gdx-skins-master/comic/skin/comic-ui.json"));
         game.generator1 = new FreeTypeFontGenerator(Gdx.files.internal("fonts/SF_Arch_Rival.ttf"));
         game.generator2 = new FreeTypeFontGenerator(Gdx.files.internal("fonts/newcomictitle3d.ttf"));

@@ -238,7 +238,9 @@ public class MapGrid extends Table {
                             gameScreen.setPlayer(!gameScreen.getPlayer());
                             if(gameScreen instanceof PlayableScreen) {
                                 game.circleSound.stop(game.circleSoundId);
-                                game.circleSoundId = game.circleSound.play(0.2f);
+                                if(!game.muteSound) {
+                                    game.circleSoundId = game.circleSound.play(0.2f);
+                                }
                             }
                             if (player2Win()) {
                                 hasWinner = true;
@@ -269,7 +271,9 @@ public class MapGrid extends Table {
                             gameScreen.setPlayer(!gameScreen.getPlayer());
                             if(gameScreen instanceof PlayableScreen) {
                                 game.crossSound.stop(game.crossSoundId);
-                                game.crossSoundId = game.crossSound.play(0.3f);
+                                if(!game.muteSound) {
+                                    game.crossSoundId = game.crossSound.play(0.3f);
+                                }
                             }
 
                             if (player1Win()) {

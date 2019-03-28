@@ -284,7 +284,9 @@ public abstract class GameScreen implements Screen {
                         drawSmallEllipse(i, j);
                         if(winnerTime[i][j] <= 0.5f && winnerTime[i][j] >= 0.25f && this instanceof com.game.tictactoeoftictactoes.screens.PlayableScreen){
                             game.fieldSound.stop(game.fieldSoundId);
-                            game.fieldSoundId = game.fieldSound.play(0.2f);
+                            if(!game.muteSound) {
+                                game.fieldSoundId = game.fieldSound.play(0.2f);
+                            }
                         }
                     }
                 }
@@ -295,7 +297,9 @@ public abstract class GameScreen implements Screen {
                         if(bigAnimation[i][j] == 0 && this instanceof com.game.tictactoeoftictactoes.screens.PlayableScreen){
                             game.circleSound.stop(game.circleSoundId);
                             game.crossSound.stop(game.crossSoundId);
-                            game.circleSoundId = game.circleSound.play(0.2f);
+                            if(!game.muteSound) {
+                                game.circleSoundId = game.circleSound.play(0.2f);
+                            }
                         }
                         mapGrids[i][j].drawBigCircle(circleRenderer, transparentRenderer, bigAnimation[i][j]);
                         bigAnimation[i][j] += 2 * delta;
@@ -304,7 +308,9 @@ public abstract class GameScreen implements Screen {
                         if(bigAnimation[i][j] == 0 && this instanceof com.game.tictactoeoftictactoes.screens.PlayableScreen){
                             game.crossSound.stop(game.crossSoundId);
                             game.circleSound.stop(game.circleSoundId);
-                            game.crossSoundId = game.crossSound.play(0.3f);
+                            if(!game.muteSound) {
+                                game.crossSoundId = game.crossSound.play(0.3f);
+                            }
                         }
                         mapGrids[i][j].drawBigCross(crossRenderer, transparentRenderer, bigAnimation[i][j]);
                         bigAnimation[i][j] += 4 * delta;
@@ -370,6 +376,13 @@ public abstract class GameScreen implements Screen {
         renderer.end();
         stage.draw();
 
+        if(game.invitation){
+            dispose();
+            game.setScreen(new OnlineSelectScreen(game));
+            ((OnlineSelectScreen)game.getScreen()).setOverLaymode(true);
+            game.invitation = false;
+        }
+
     }
 
     @Override
@@ -387,7 +400,7 @@ public abstract class GameScreen implements Screen {
 
     @Override
     public void resume() {
-        if(game.gameMusic != null && !game.gameMusic.isPlaying()){
+        if(game.gameMusic != null && !game.gameMusic.isPlaying() && !game.muteSound){
             game.gameMusic.play();
         }
     }
@@ -405,5 +418,6 @@ public abstract class GameScreen implements Screen {
         transparentRenderer.dispose();
         circleRenderer.dispose();
         dimRenderer.dispose();
+        stage.dispose();
     }
 }

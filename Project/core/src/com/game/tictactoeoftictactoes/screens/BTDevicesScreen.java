@@ -77,7 +77,9 @@ public class BTDevicesScreen implements Screen, Runnable {
         createGameButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 if(game.conHandler.enableConnection()) {
                     game.conHandler.startServer();
                     overLaymode1 = true;
@@ -90,7 +92,9 @@ public class BTDevicesScreen implements Screen, Runnable {
         joinGameButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 if(game.conHandler.enableConnection()) {
                     synchronized (thread) {
                         if (!thread.isAlive()) {
@@ -111,7 +115,9 @@ public class BTDevicesScreen implements Screen, Runnable {
         backButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 game.setScreen(new TwoPlayerSelectScreen(game));
             }
@@ -121,7 +127,9 @@ public class BTDevicesScreen implements Screen, Runnable {
         backOverlayButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 overLaymode2 = false;
                 Gdx.input.setInputProcessor(stage);
                 game.conHandler.cancel();
@@ -133,7 +141,9 @@ public class BTDevicesScreen implements Screen, Runnable {
         refreshDeviceButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 synchronized (thread) {
                     if (!thread.isAlive()) {
                         try {
@@ -152,7 +162,9 @@ public class BTDevicesScreen implements Screen, Runnable {
             public void changed(ChangeEvent event, Actor actor) {
                 game.conHandler.cancel();
                 game.conHandler.enableConnection();
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 overLaymode1 = false;
                 if(overLaymode2){
                     Gdx.input.setInputProcessor(overLayStage2);
@@ -259,6 +271,13 @@ public class BTDevicesScreen implements Screen, Runnable {
                 game.setScreen(playableScreen);
             }
         }
+        if(game.invitation){
+            dispose();
+            game.setScreen(new OnlineSelectScreen(game));
+            ((OnlineSelectScreen)game.getScreen()).setOverLaymode(true);
+            game.invitation = false;
+
+        }
     }
 
     @Override
@@ -273,7 +292,7 @@ public class BTDevicesScreen implements Screen, Runnable {
 
     @Override
     public void resume() {
-        if(game.gameMusic != null && !game.gameMusic.isPlaying()){
+        if(game.gameMusic != null && !game.gameMusic.isPlaying() && !game.muteSound){
             game.gameMusic.play();
         }
     }
@@ -285,7 +304,9 @@ public class BTDevicesScreen implements Screen, Runnable {
 
     @Override
     public void dispose() {
-
+        stage.dispose();
+        dimRenderer.dispose();
+        waitAnimationRenderer.dispose();
     }
 
     @Override
@@ -306,8 +327,9 @@ public class BTDevicesScreen implements Screen, Runnable {
                             button.addListener(new ChangeListener() {
                                 @Override
                                 public void changed(ChangeEvent event, Actor actor) {
-                                    game.buttonSound.play(0.8f);
-                                    overLaymode1 = true;
+                                    if(!game.muteSound) {
+                                        game.buttonSound.play(0.8f);
+                                    }                                    overLaymode1 = true;
                                     Gdx.input.setInputProcessor(overLayStage1);
                                     game.setActiveBtDevice(String.valueOf(button.getLabel().getText()));
                                 }

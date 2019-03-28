@@ -139,7 +139,9 @@ public class AndroidLauncher extends AndroidApplication implements com.game.tict
 				// Load the next interstitial.
 				mInterstitialAd.loadAd(new AdRequest.Builder().build());
 				if(!game.gameMusic.isPlaying()){
-					game.gameMusic.play();
+					if(!game.muteSound) {
+						game.gameMusic.play();
+					}
 				}
 			}
 		});
@@ -262,7 +264,8 @@ public class AndroidLauncher extends AndroidApplication implements com.game.tict
 			}
 
 			if (resultCode == Activity.RESULT_OK) {
-				System.out.println("Result ok");
+				Log.d("TAG", "Waiting Room returned OK");
+
 			} else if (resultCode == Activity.RESULT_CANCELED) {
 				// Waiting room was dismissed with the back button. The meaning of this
 				// action is up to the game. You may choose to leave the room and cancel the
@@ -274,13 +277,12 @@ public class AndroidLauncher extends AndroidApplication implements com.game.tict
 					game.player = 0;
 					((OnlineSelectScreen) game.getScreen()).setOverLaymode(false);
 				}
-                System.out.println(5);
 				Games.getRealTimeMultiplayerClient(this,
 						GoogleSignIn.getLastSignedInAccount(this))
 						.leave(googleConnection.mJoinedRoomConfig, googleConnection.mRoom.getRoomId());
 				getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 			} else if (resultCode == GamesActivityResultCodes.RESULT_LEFT_ROOM) {
-                System.out.println(6);
+				Log.d("TAG", "Waiting Room returned LEFT ROOM");
 				// player wants to leave the room.
 				Games.getRealTimeMultiplayerClient(this,
 						GoogleSignIn.getLastSignedInAccount(this))
@@ -291,7 +293,7 @@ public class AndroidLauncher extends AndroidApplication implements com.game.tict
 
 
 
-		if(game.gameMusic != null && !game.gameMusic.isPlaying()){
+		if(game.gameMusic != null && !game.gameMusic.isPlaying() && !game.muteSound){
 			game.gameMusic.play();
 		}
 
@@ -332,6 +334,13 @@ public class AndroidLauncher extends AndroidApplication implements com.game.tict
 			}
 		});
 
+	}
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if(googleConnection.loggedIn()) {
+			googleConnection.logIn();
+		}
 	}
 
 

@@ -32,8 +32,9 @@ public class OnlinePlayableScreen extends PlayableScreen {
         replayButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
-                System.out.println("hier");
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 overLayMode = true;
             }
         });
@@ -42,7 +43,9 @@ public class OnlinePlayableScreen extends PlayableScreen {
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 overLayMode = true;
                 backToMenu = true;
             }
@@ -51,7 +54,7 @@ public class OnlinePlayableScreen extends PlayableScreen {
         Label.LabelStyle labelStyle1 = new Label.LabelStyle();
         labelStyle1.font = game.font1;
         labelStyle1.fontColor = Color.BLACK;
-        areYouSureLabel = new Label("Are you sure to leave?\nYou will lose Ranking Points!"
+        areYouSureLabel = new Label("Are you sure to leave?\nYour Ranking Points will be lost!"
                 , labelStyle1);
         areYouSureLabel.setAlignment(Align.center);
         areYouSureLabel.setWrap(true);
@@ -62,11 +65,12 @@ public class OnlinePlayableScreen extends PlayableScreen {
         yesButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 game.player = 0;
                 active = false;
-                game.googleConHandler.addLoseToScore();
                 if(backToMenu){
                     game.setScreen(new MainMenuScreen(game));
                 }
@@ -80,7 +84,9 @@ public class OnlinePlayableScreen extends PlayableScreen {
         noButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 overLayMode = false;
             }
         });
@@ -128,10 +134,15 @@ public class OnlinePlayableScreen extends PlayableScreen {
         if(timeOut >= 15){
             timeOut = 15;
             if(winnerScreen.getStage() == null) {
-                winnerScreen.setWinner(getPlayer() ? (byte) 1 : (byte) 2, playerMovementLabel.getText().toString().startsWith("Enemy Turn"));
-                winnerStage.addActor(winnerScreen);
-                Gdx.input.setInputProcessor(winnerStage);
-                winnerScreen.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
+                if(game.googleConHandler.isConnected()) {
+                    winnerScreen.setWinner(getPlayer() ? (byte) 1 : (byte) 2, playerMovementLabel.getText().toString().startsWith("Enemy Turn"));
+                    winnerStage.addActor(winnerScreen);
+                    Gdx.input.setInputProcessor(winnerStage);
+                    winnerScreen.setPosition(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
+                }
+                else {
+                    game.googleConHandler.showConnectionFailedStatement();
+                }
             }
             else{
                 dimRenderer.setProjectionMatrix(camera.combined);
@@ -161,6 +172,16 @@ public class OnlinePlayableScreen extends PlayableScreen {
                 Gdx.input.setInputProcessor(stage);
             }
         }
+        if(!game.googleConHandler.isConnected()){
+            game.googleConHandler.showConnectionFailedStatement();
+            game.player = 0;
+            game.getScreen().dispose();
+            game.setScreen(new TwoPlayerSelectScreen(game));
+        }
+    }
+
+    public void dispose(){
+        overlayStage.dispose();
     }
 
 }

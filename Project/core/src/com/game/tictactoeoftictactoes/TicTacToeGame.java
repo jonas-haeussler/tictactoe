@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 public class TicTacToeGame extends Game {
 	public SpriteBatch batch;
-	public Texture background, cup, swords;
+	public Texture background, cup, swords, muteSoundTexture, playSoundTexture;
 	public Skin comicSkin;
 	private com.game.tictactoeoftictactoes.utils.AssetLoader loader;
 	public FreeTypeFontGenerator generator1;
@@ -41,6 +41,8 @@ public class TicTacToeGame extends Game {
 	public GoogleConHandler googleConHandler;
 	public com.game.tictactoeoftictactoes.utils.AdShower adShower;
 	public boolean onlineMode;
+	public boolean invitation;
+	public boolean muteSound;
 
 
 	public BitmapFont createFont(FreeTypeFontGenerator ftfg, int size) {

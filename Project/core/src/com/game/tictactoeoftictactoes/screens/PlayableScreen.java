@@ -69,7 +69,9 @@ public abstract class PlayableScreen extends GameScreen {
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 active = false;
                 game.player = 0;
@@ -85,7 +87,9 @@ public abstract class PlayableScreen extends GameScreen {
         replayButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 active = false;
                     if(kiPlayer > 0) {

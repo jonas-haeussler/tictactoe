@@ -31,13 +31,16 @@ public class WinnerScreen extends Table {
         newGameButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 game.adShower.showInterstitialAd();
                 if(game.getScreen() instanceof KIPlayableScreen) {
                     game.setScreen(new KIPlayableScreen(game, gameScreen.getKiPlayer1(), gameScreen.getKiLevel()));
                 }
                 else if(game.getScreen() instanceof LocalPlayableScreen){
+                    game.googleConHandler.incrementAchievement(5, 0);
                     game.setScreen(new LocalPlayableScreen(game));
                 }
                 else if(game.getScreen() instanceof BTPlayableScreen){
@@ -50,13 +53,14 @@ public class WinnerScreen extends Table {
                     game.player = 0;
                     if(playerWins){
                         game.googleConHandler.addWinToScore();
-                    }
-                    else {
-                        game.googleConHandler.addLoseToScore();
+                        game.googleConHandler.incrementAchievement(6, 7);
+                        game.googleConHandler.showScoreIncreased();
                     }
                     game.setScreen(new OnlineSelectScreen(game));
                 }
-                game.gameMusic.play();
+                if(!game.muteSound) {
+                    game.gameMusic.play();
+                }
             }
         });
         menuButton = new TextButton("Back to Menu", game.comicSkin);
@@ -64,7 +68,9 @@ public class WinnerScreen extends Table {
         menuButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 game.btConnected = false;
                 game.player = 0;
@@ -73,13 +79,18 @@ public class WinnerScreen extends Table {
                 if(game.getScreen() instanceof OnlinePlayableScreen){
                     if(playerWins){
                         game.googleConHandler.addWinToScore();
-                    }
-                    else {
-                        game.googleConHandler.addLoseToScore();
+                        game.googleConHandler.incrementAchievement(6, 7);
+                        game.googleConHandler.showScoreIncreased();
+
                     }
                 }
+                else if(game.getScreen() instanceof LocalPlayableScreen){
+                    game.googleConHandler.incrementAchievement(5, 0);
+                }
                 game.setScreen(new MainMenuScreen(game));
-                game.gameMusic.play();
+                if(!game.muteSound) {
+                    game.gameMusic.play();
+                }
             }
         });
 
@@ -109,7 +120,9 @@ public class WinnerScreen extends Table {
                     game.crossSound.stop();
                     game.fieldSound.stop();
                     game.gameMusic.stop();
-                    game.winnerMusic.play();
+                    if(!game.muteSound) {
+                        game.winnerMusic.play();
+                    }
                 }
                 animationTime += delta;
                 add(cupImage).width(animationTime * Gdx.graphics.getWidth() / 4).height(animationTime * Gdx.graphics.getHeight() / 4);
@@ -139,7 +152,9 @@ public class WinnerScreen extends Table {
                 game.crossSound.stop();
                 game.fieldSound.stop();
                 game.gameMusic.stop();
-                game.drawMusic.play();
+                if(!game.muteSound) {
+                    game.drawMusic.play();
+                }
             }
             animationTime += delta;
             add(swordsImage).width(animationTime * Gdx.graphics.getWidth() / 4).height(animationTime * Gdx.graphics.getHeight() / 4);

@@ -2,7 +2,11 @@ package com.game.tictactoeoftictactoes;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,6 +14,7 @@ import android.util.Log;
 import android.view.WindowManager;
 import com.game.tictactoe.R;
 import com.game.tictactoeoftictactoes.objects.MapGrid;
+import com.game.tictactoeoftictactoes.screens.OnlineSelectScreen;
 import com.game.tictactoeoftictactoes.utils.GoogleConHandler;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -37,13 +42,13 @@ public class GoogleConnection implements GoogleConHandler {
     protected RoomStatusUpdateCallback mRoomStatusCallbackHandler;
     protected RoomConfig mJoinedRoomConfig;
     protected String mMyParticipantId;
-    protected InvitationCallback mInvitationCallbackHandler;
     protected OnRealTimeMessageReceivedListener mMessageReceivedHandler;
     protected boolean mWaitingRoomFinishedFromCode = false;
     private RealTimeMultiplayerClient.ReliableMessageSentCallback handleMessageSentCallback;
     private HashSet<Integer> pendingMessageSet = new HashSet<>();
 
     protected byte random;
+    private boolean connected;
 
 
     private TicTacToeGame game;
@@ -61,7 +66,9 @@ public class GoogleConnection implements GoogleConHandler {
     public GoogleConnection(final AndroidLauncher launcher, final TicTacToeGame game){
         this.launcher = launcher;
         this.game = game;
-        client = Games.getRealTimeMultiplayerClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher));
+        if(GoogleSignIn.getLastSignedInAccount(launcher) != null) {
+            client = Games.getRealTimeMultiplayerClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher));
+        }
         mRoomUpdateCallback = new RoomUpdateCallback() {
             @Override
             public void onRoomCreated(int code, @Nullable Room room) {
@@ -82,7 +89,7 @@ public class GoogleConnection implements GoogleConHandler {
             public void onJoinedRoom(int code, @Nullable Room room) {
                 // Update UI and internal state based on room updates.
                 if (code == GamesCallbackStatusCodes.OK && room != null) {
-//                    showWaitingRoom(room, 2);
+                    showWaitingRoom(room, 2);
                     mRoom = room;
                     Log.d("TAG", "Room " + room.getRoomId() + " joined.");
                 } else {
@@ -119,27 +126,30 @@ public class GoogleConnection implements GoogleConHandler {
             @Override
             public void onRoomConnecting(@Nullable Room room) {
                 mRoom = room;
+                Log.w("TAG", "Connecting to Room: " + room);
                 // Update the UI status since we are in the process of connecting to a specific room.
             }
 
             @Override
             public void onRoomAutoMatching(@Nullable Room room) {
                 mRoom = room;
+                Log.w("TAG", "Automatching to Room: " + room);
                 // Update the UI status since we are in the process of matching other players.
             }
 
             @Override
             public void onPeerInvitedToRoom(@Nullable Room room, @NonNull List<String> list) {
                 mRoom = room;
+                Log.w("TAG", "Invited Peers to Room: " + room);
                 // Update the UI status since we are in the process of matching other players.
             }
 
             @Override
             public void onPeerDeclined(@Nullable Room room, @NonNull List<String> list) {
                 // Peer declined invitation, see if game should be canceled
+                Log.w("TAG", "Peer declined connecting to Room: " + room);
                 mRoom = room;
                 if (!mPlaying && shouldCancelGame(room)) {
-                    System.out.println(0);
                     Games.getRealTimeMultiplayerClient(launcher,
                             GoogleSignIn.getLastSignedInAccount(launcher))
                             .leave(mJoinedRoomConfig, room.getRoomId());
@@ -149,16 +159,17 @@ public class GoogleConnection implements GoogleConHandler {
 
             @Override
             public void onPeerJoined(@Nullable Room room, @NonNull List<String> list) {
+                Log.w("TAG", "Peer joined to Room: " + room);
                 mRoom = room;
                 // Update UI status indicating new players have joined!
             }
 
             @Override
             public void onPeerLeft(@Nullable Room room, @NonNull List<String> list) {
+                Log.w("TAG", "Peer left the Room: " + room);
                 mRoom = room;
                 // Peer left, see if game should be canceled.
                 if (!mPlaying && shouldCancelGame(room)) {
-                    System.out.println(1);
                     Games.getRealTimeMultiplayerClient(launcher,
                             GoogleSignIn.getLastSignedInAccount(launcher))
                             .leave(mJoinedRoomConfig, room.getRoomId());
@@ -169,6 +180,7 @@ public class GoogleConnection implements GoogleConHandler {
             @Override
             public void onConnectedToRoom(@Nullable Room room) {
                 // Connected to room, record the room Id.
+                Log.w("TAG", "Connected to Room: " + room);
                 mRoom = room;
                 Games.getPlayersClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher))
                         .getCurrentPlayerId().addOnSuccessListener(new OnSuccessListener<String>() {
@@ -182,7 +194,9 @@ public class GoogleConnection implements GoogleConHandler {
             @Override
             public void onDisconnectedFromRoom(@Nullable Room room) {
                 // This usually happens due to a network error, leave the game.
-                System.out.println(2);
+                Log.w("TAG", "Disconnected from Room: " + room);
+                connected = false;
+
                 Games.getRealTimeMultiplayerClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher))
                         .leave(mJoinedRoomConfig, room.getRoomId());
                 launcher.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -193,24 +207,26 @@ public class GoogleConnection implements GoogleConHandler {
 
             @Override
             public void onPeersConnected(@Nullable Room room, @NonNull List<String> list) {
+                Log.w("TAG", "Peers are connected in Room: " + room);
                 if (mPlaying) {
                     // add new player to an ongoing game
                 } else if (shouldStartGame(room)) {
                     mRoom = room;
                     random = (byte) ((int)(Math.random() * 2) + 1);
                     sendToAllReliably(new byte[]{googleConnection.random});
+                    connected = true;
                 }
             }
 
             @Override
             public void onPeersDisconnected(@Nullable Room room, @NonNull List<String> list) {
+                Log.w("TAG", "Peers are disconnected in Room: " + room);
                 if (mPlaying) {
                     // do game-specific handling of this -- remove player's avatar
                     // from the screen, etc. If not enough players are left for
                     // the game to go on, end the game and leave the room.
                 } else if (shouldCancelGame(room)) {
                     // cancel the game
-                    System.out.println(3);
                     Games.getRealTimeMultiplayerClient(launcher,
                             GoogleSignIn.getLastSignedInAccount(launcher))
                             .leave(mJoinedRoomConfig, room.getRoomId());
@@ -220,6 +236,7 @@ public class GoogleConnection implements GoogleConHandler {
 
             @Override
             public void onP2PConnected(@NonNull String participantId) {
+
                 // Update status due to new peer to peer connection.
             }
 
@@ -228,36 +245,13 @@ public class GoogleConnection implements GoogleConHandler {
                 // Update status due to  peer to peer connection being disconnected.
             }
         };
-
-        mInvitationCallbackHandler = new InvitationCallback() {
-            @Override
-            public void onInvitationReceived(@NonNull Invitation invitation) {
-                RoomConfig.Builder builder = RoomConfig.builder(mRoomUpdateCallback)
-                        .setInvitationIdToAccept(invitation.getInvitationId());
-                mJoinedRoomConfig = builder.build();
-                Games.getRealTimeMultiplayerClient(launcher,
-                        GoogleSignIn.getLastSignedInAccount(launcher))
-                        .join(mJoinedRoomConfig);
-                // prevent screen from sleeping during handshake
-                launcher.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-            }
-
-            @Override
-            public void onInvitationRemoved(@NonNull String invitationId) {
-                // Invitation removed.
-            }
-        };
-
         mMessageReceivedHandler =
                 new OnRealTimeMessageReceivedListener() {
                     @Override
                     public void onRealTimeMessageReceived(@NonNull RealTimeMessage realTimeMessage) {
                         // Handle messages received here.
-//                        System.out.print("Message received: ");
+                        Log.d("TAG", "A Message has been received");
                         byte[] message = realTimeMessage.getMessageData();
-                        for (int i = 0; i < message.length; i++) {
-                            System.out.println(message[i]);
-                        }
                         if (game.player == 0) {
                             if (message[0] != random) {
                                 game.player = message[0];
@@ -294,7 +288,7 @@ public class GoogleConnection implements GoogleConHandler {
                     public void onRealTimeMessageSent(int statusCode, int tokenId, String recipientId) {
                         // handle the message being sent.
                         synchronized (this) {
-                            System.out.println("Message sent succesfully");
+                            Log.d("TAG", "Message sent successfully");
                             pendingMessageSet.remove(tokenId);
                         }
                     }
@@ -351,38 +345,53 @@ public class GoogleConnection implements GoogleConHandler {
     }
 
     private void checkForInvitation() {
-        Games.getGamesClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher))
-                .getActivationHint()
-                .addOnSuccessListener(
-                        new OnSuccessListener<Bundle>() {
-                            @Override
-                            public void onSuccess(Bundle bundle) {
-                                Invitation invitation = bundle.getParcelable(Multiplayer.EXTRA_INVITATION);
-                                if (invitation != null) {
-                                    RoomConfig.Builder builder = RoomConfig.builder(mRoomUpdateCallback)
-                                            .setInvitationIdToAccept(invitation.getInvitationId());
-                                    mJoinedRoomConfig = builder.build();
-                                    Games.getRealTimeMultiplayerClient(launcher,
-                                            GoogleSignIn.getLastSignedInAccount(launcher))
-                                            .join(mJoinedRoomConfig);
-                                    // prevent screen from sleeping during handshake
-                                    launcher.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        if(GoogleSignIn.getLastSignedInAccount(launcher) != null) {
+            Games.getGamesClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher))
+                    .getActivationHint()
+                    .addOnSuccessListener(
+                            new OnSuccessListener<Bundle>() {
+                                @Override
+                                public void onSuccess(Bundle bundle) {
+                                    if (bundle != null) {
+                                        Invitation invitation = bundle.getParcelable(Multiplayer.EXTRA_INVITATION);
+                                        if (invitation != null) {
+                                            RoomConfig.Builder builder = RoomConfig.builder(mRoomUpdateCallback)
+                                                    .setInvitationIdToAccept(invitation.getInvitationId());
+                                            mJoinedRoomConfig = builder.setOnMessageReceivedListener(mMessageReceivedHandler)
+                                                    .setRoomStatusUpdateCallback(mRoomStatusCallbackHandler)
+                                                    .build();
+                                            Games.getRealTimeMultiplayerClient(launcher,
+                                                    GoogleSignIn.getLastSignedInAccount(launcher))
+                                                    .join(mJoinedRoomConfig);
+                                            game.invitation = true;
+                                            // prevent screen from sleeping during handshake
+                                            launcher.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                                        }
+                                    }
                                 }
                             }
-                        }
-                );
+                    );
+        }
 
     }
 
     @Override
     public void logIn() {
         signInSilently();
+        checkForInvitation();
     }
 
     @Override
-    public void logOut() {
-
+    public void showScoreIncreased(){
+        launcher.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                new AlertDialog.Builder(launcher).setMessage("Congratulation! Your Score has increased by 20!")
+                        .setNeutralButton(android.R.string.ok, null).show();
+            }
+        });
     }
+
 
     @Override
     public void leaveRoom() {
@@ -399,8 +408,6 @@ public class GoogleConnection implements GoogleConHandler {
             // Already signed in.
             // The signed in account is stored in the 'account' variable.
             GoogleSignInAccount signedInAccount = account;
-            new AlertDialog.Builder(launcher).setMessage("Connection was successful")
-                    .setNeutralButton(android.R.string.ok, null).show();
         } else {
             // Haven't been signed-in before. Try the silent sign-in first.
             GoogleSignInClient signInClient = GoogleSignIn.getClient(launcher, signInOptions);
@@ -527,9 +534,12 @@ public class GoogleConnection implements GoogleConHandler {
             ).addOnSuccessListener(new OnSuccessListener<AnnotatedData<LeaderboardScore>>() {
                 @Override
                 public void onSuccess(AnnotatedData<LeaderboardScore> leaderboardScoreAnnotatedData) {
-                    if (leaderboardScoreAnnotatedData.get() == null)
+                    if (leaderboardScoreAnnotatedData.get() == null) {
+                        Log.d("TAG", "Adding new Score");
                         mLeaderboardsClient.submitScore(leaderboardId, 1020);
+                    }
                     else {
+                        Log.d("TAG", "Increasing Score");
                         long currentscore = leaderboardScoreAnnotatedData.get().getRawScore();
                         mLeaderboardsClient.submitScore(leaderboardId, currentscore + 20);
                     }
@@ -538,28 +548,31 @@ public class GoogleConnection implements GoogleConHandler {
         }
     }
 
-    @Override
-    public void addLoseToScore(){
-        if(GoogleSignIn.getLastSignedInAccount(launcher) != null) {
-            final LeaderboardsClient mLeaderboardsClient = Games.getLeaderboardsClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher));
-            final String leaderboardId = launcher.getString(R.string.leaderboard_id);
-            mLeaderboardsClient.loadCurrentPlayerLeaderboardScore(
-                    leaderboardId,
-                    LeaderboardVariant.TIME_SPAN_ALL_TIME,
-                    LeaderboardVariant.COLLECTION_PUBLIC
-            ).addOnSuccessListener(new OnSuccessListener<AnnotatedData<LeaderboardScore>>() {
-                @Override
-                public void onSuccess(AnnotatedData<LeaderboardScore> leaderboardScoreAnnotatedData) {
-                    if (leaderboardScoreAnnotatedData.get() == null)
-                        mLeaderboardsClient.submitScore(leaderboardId,  980);
-                    else {
-                        long currentscore = leaderboardScoreAnnotatedData.get().getRawScore();
-                        mLeaderboardsClient.submitScore(leaderboardId, currentscore - 20);
-                    }
-                }
-            });
-        }
-    }
+//    @Override
+//    public void addLoseToScore(){
+//        if(GoogleSignIn.getLastSignedInAccount(launcher) != null) {
+//            final LeaderboardsClient mLeaderboardsClient = Games.getLeaderboardsClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher));
+//            final String leaderboardId = launcher.getString(R.string.leaderboard_id);
+//            mLeaderboardsClient.loadCurrentPlayerLeaderboardScore(
+//                    leaderboardId,
+//                    LeaderboardVariant.TIME_SPAN_ALL_TIME,
+//                    LeaderboardVariant.COLLECTION_PUBLIC
+//            ).addOnSuccessListener(new OnSuccessListener<AnnotatedData<LeaderboardScore>>() {
+//                @Override
+//                public void onSuccess(AnnotatedData<LeaderboardScore> leaderboardScoreAnnotatedData) {
+//                    if (leaderboardScoreAnnotatedData.get() == null) {
+//                        Log.d("TAG", "Adding new Score");
+//                        mLeaderboardsClient.submitScore(leaderboardId, 980);
+//                    }
+//                    else {
+//                        Log.d("TAG", "Decreasing Score");
+//                        long currentscore = leaderboardScoreAnnotatedData.get().getRawScore();
+//                        mLeaderboardsClient.submitScore(leaderboardId, currentscore - 20);
+//                    }
+//                }
+//            });
+//        }
+//    }
 
     @Override
     public void showAchievements(){
@@ -670,28 +683,26 @@ public class GoogleConnection implements GoogleConHandler {
     }
 
     void sendToAllReliably(byte[] message) {
-        if (mRoom != null) {
-            for (Participant p : mRoom.getParticipants()) {
-                if (p.isConnectedToRoom()) {
-                    System.out.println("One is Connected");
-                }
-            }
-
-            for (String participantId : mRoom.getParticipantIds()) {
-                if (!participantId.equals(mMyParticipantId)) {
-                    System.out.println("Message sent: " + message[0]);
-                    Task<Integer> task = Games.
-                            getRealTimeMultiplayerClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher))
-                            .sendReliableMessage(message, mRoom.getRoomId(), participantId,
-                                    handleMessageSentCallback).addOnCompleteListener(new OnCompleteListener<Integer>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Integer> task) {
-                                    // Keep track of which messages are sent, if desired
-                                    recordMessageToken(task.getResult());
-                                }
-                            });
-                }
+        for (String participantId : mRoom.getParticipantIds()) {
+            if (!participantId.equals(mMyParticipantId)) {
+                Log.d("TAG", "A Message has been sent");
+                Task<Integer> task = Games.
+                        getRealTimeMultiplayerClient(launcher, GoogleSignIn.getLastSignedInAccount(launcher))
+                        .sendReliableMessage(message, mRoom.getRoomId(), participantId,
+                                handleMessageSentCallback).addOnCompleteListener(new OnCompleteListener<Integer>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Integer> task) {
+                                // Keep track of which messages are sent, if desired
+                                recordMessageToken(task.getResult());
+                            }
+                        });
             }
         }
     }
+    @Override
+    public boolean isConnected(){
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) launcher.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();    }
 }

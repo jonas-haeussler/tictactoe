@@ -65,7 +65,9 @@ public class OnlineSelectScreen implements Screen {
         quickGameButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 if(game.googleConHandler.loggedIn()) {
                     if(game.getScreen() instanceof OnlineSelectScreen) {
                         ((OnlineSelectScreen) game.getScreen()).setOverLaymode(true);
@@ -83,7 +85,9 @@ public class OnlineSelectScreen implements Screen {
         invitePlayersButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 if(game.googleConHandler.loggedIn()){
                     if(game.getScreen() instanceof OnlineSelectScreen){
                         ((OnlineSelectScreen)game.getScreen()).setOverLaymode(true);
@@ -103,7 +107,9 @@ public class OnlineSelectScreen implements Screen {
         invitationsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 if(game.googleConHandler.loggedIn()){
                     game.googleConHandler.showInvitationInbox();
                     if(game.getScreen() instanceof OnlineSelectScreen){
@@ -120,7 +126,9 @@ public class OnlineSelectScreen implements Screen {
         backButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 game.setScreen(new com.game.tictactoeoftictactoes.screens.TwoPlayerSelectScreen(game));
             }
@@ -218,6 +226,13 @@ public class OnlineSelectScreen implements Screen {
         else if(Gdx.input.getInputProcessor().equals(overLayStage)){
             Gdx.input.setInputProcessor(stage);
         }
+        if(game.invitation){
+            dispose();
+            game.setScreen(new OnlineSelectScreen(game));
+            ((OnlineSelectScreen)game.getScreen()).setOverLaymode(true);
+            game.invitation = false;
+
+        }
     }
 
     @Override
@@ -232,7 +247,7 @@ public class OnlineSelectScreen implements Screen {
 
     @Override
     public void resume() {
-        if(game.gameMusic != null && !game.gameMusic.isPlaying()){
+        if(game.gameMusic != null && !game.gameMusic.isPlaying() && !game.muteSound){
             game.gameMusic.play();
         }
     }

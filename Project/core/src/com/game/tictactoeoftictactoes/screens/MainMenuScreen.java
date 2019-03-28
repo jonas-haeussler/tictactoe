@@ -7,10 +7,13 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.game.tictactoeoftictactoes.TicTacToeGame;
@@ -20,6 +23,7 @@ public class MainMenuScreen implements Screen {
     private OrthographicCamera camera;
     private Label headingLabel;
     private TextButton easyModeButton, hardModeButton, onlinePlayerButton, helpButton, achievementsButton, leaderBoardButton, logInButton;
+    private ImageButton muteSoundButton;
     private Table table;
     private Stage stage;
     public MainMenuScreen(final TicTacToeGame game) {
@@ -39,7 +43,9 @@ public class MainMenuScreen implements Screen {
         easyModeButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 byte x = (byte) (Math.random() * 2 + 1);
                 game.setScreen(new KIPlayableScreen(game, x, (byte) 0));
@@ -50,7 +56,9 @@ public class MainMenuScreen implements Screen {
         hardModeButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 byte x = (byte) (Math.random() * 2 + 1);
                 game.setScreen(new KIPlayableScreen(game, x, (byte) 1));
@@ -61,7 +69,9 @@ public class MainMenuScreen implements Screen {
         onlinePlayerButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 game.setScreen(new TwoPlayerSelectScreen(game));
             }
@@ -71,7 +81,9 @@ public class MainMenuScreen implements Screen {
         helpButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.getScreen().dispose();
                 game.setScreen(new com.game.tictactoeoftictactoes.screens.HelpScreen(game));
             }
@@ -81,8 +93,9 @@ public class MainMenuScreen implements Screen {
         logInButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
-                game.getScreen().dispose();
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.googleConHandler.logIn();
             }
         });
@@ -90,7 +103,9 @@ public class MainMenuScreen implements Screen {
         leaderBoardButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.googleConHandler.showLeaderBoard();
             }
         });
@@ -98,8 +113,38 @@ public class MainMenuScreen implements Screen {
         achievementsButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.googleConHandler.showAchievements();
+            }
+        });
+
+        if(!game.muteSound) {
+            muteSoundButton = new ImageButton(new TextureRegionDrawable(game.muteSoundTexture));
+        }
+        else {
+            muteSoundButton = new ImageButton(new TextureRegionDrawable(game.playSoundTexture));
+        }
+        muteSoundButton.addListener(new ChangeListener() {
+            @Override
+            public void changed(ChangeEvent event, Actor actor) {
+                if(!game.muteSound) {
+                    game.muteSound = true;
+                    game.gameMusic.stop();
+                    muteSoundButton = new ImageButton(new TextureRegionDrawable(game.playSoundTexture));
+                    muteSoundButton.addListener(this);
+                    initStage();
+                }
+                else {
+                    game.buttonSound.play(0.8f);
+                    game.muteSound = false;
+                    game.gameMusic.play();
+                    muteSoundButton = new ImageButton(new TextureRegionDrawable(game.muteSoundTexture));
+                    muteSoundButton.addListener(this);
+                    initStage();
+                }
+
             }
         });
 
@@ -135,6 +180,9 @@ public class MainMenuScreen implements Screen {
         else {
             table.add(logInButton).width(Gdx.graphics.getWidth() / 1.5f).height(Gdx.graphics.getHeight() / 10).padTop(50).colspan(2);
         }
+        table.row();
+        table.add(muteSoundButton).padTop(50).width(Gdx.graphics.getWidth() / 8).height(Gdx.graphics.getHeight() / 25).colspan(2);
+
         stage.addActor(headingLabel);
         stage.addActor(table);
     }
@@ -159,8 +207,12 @@ public class MainMenuScreen implements Screen {
 
         stage.draw();
 
-        if(Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) {
-//            game.appCloser.onBackPressed();
+
+        if(game.invitation){
+            dispose();
+            game.setScreen(new OnlineSelectScreen(game));
+            ((OnlineSelectScreen)game.getScreen()).setOverLaymode(true);
+            game.invitation = false;
         }
     }
 
@@ -176,7 +228,7 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void resume() {
-        if(game.gameMusic != null && !game.gameMusic.isPlaying()){
+        if(game.gameMusic != null && !game.gameMusic.isPlaying() && !game.muteSound){
             game.gameMusic.play();
         }
     }
@@ -188,6 +240,6 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        stage.dispose();
     }
 }

@@ -27,7 +27,9 @@ public class BTPlayableScreen extends com.game.tictactoeoftictactoes.screens.Pla
         backFromWaitButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.player = 0;
                 game.conHandler.cancel();
                 game.conHandler.enableConnection();
@@ -39,7 +41,9 @@ public class BTPlayableScreen extends com.game.tictactoeoftictactoes.screens.Pla
         replayButton.addListener(new ChangeListener() {
             @Override
             public void changed(ChangeEvent event, Actor actor) {
-                game.buttonSound.play(0.8f);
+                if(!game.muteSound) {
+                    game.buttonSound.play(0.8f);
+                }
                 game.player = 0;
                 game.conHandler.cancel();
                 game.conHandler.enableConnection();
